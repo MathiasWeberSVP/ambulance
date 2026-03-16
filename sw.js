@@ -1,4 +1,4 @@
-const CACHE = 'cpr-assist-v3';
+const CACHE = 'cpr-assist-v1.0';
 const FILES = ['./cpr-tool.html', './manifest.json'];
 
 self.addEventListener('install', e => {

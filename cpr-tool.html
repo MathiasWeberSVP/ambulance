@@ -494,6 +494,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   <div id="logs-export"></div>
   <div class="so-btns">
     <button id="copy-btn" onclick="copyLogs()">📋 Copier</button>
+    <button id="dl-btn" onclick="downloadLogs()" style="background:var(--green);color:#fff;">⬇ Télécharger</button>
     <button id="close-so" onclick="closeStop()">Continuer</button>
   </div>
 </div>
@@ -1005,11 +1006,7 @@ function closeStop(){document.getElementById('stop-ov').classList.remove('show')
 function copyLogs(){
   const t=document.getElementById('logs-export').textContent;
   navigator.clipboard.writeText(t).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);});
-  <div class="so-btns">
-    <button id="copy-btn" onclick="copyLogs()">📋 Copier</button>
-    <button id="dl-btn" onclick="downloadLogs()" style="background:var(--green);color:#fff;">⬇ Télécharger</button>
-    <button id="close-so" onclick="closeStop()">Continuer</button>
-  </div>
+  document.getElementById('copy-btn').textContent='✅ Copié';
   setTimeout(()=>document.getElementById('copy-btn').textContent='📋 Copier',2000);
 }
 function downloadLogs(){

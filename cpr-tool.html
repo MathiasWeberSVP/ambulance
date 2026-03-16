@@ -461,17 +461,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div class="prow">
         <div>
           <div class="pname">Guidelines</div>
-          <div class="pdesc" id="guidelines-desc">ERC 2021 — Adrénaline après le 3ème choc</div>
+          <div class="pdesc" id="guidelines-desc">ERC 2025 — Adrénaline après le 3ème choc</div>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button id="btn-erc" onclick="setGuidelines('ERC')"
           style="flex:1;padding:10px;border-radius:var(--r);border:2px solid var(--blue);background:var(--blue-bg);color:var(--blue2);font-size:13px;font-weight:700;cursor:pointer">
-          ERC 2021
+          ERC 2025
         </button>
         <button id="btn-aha" onclick="setGuidelines('AHA')"
           style="flex:1;padding:10px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer">
-          AHA 2020
+          AHA 2025
         </button>
       </div>
       <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5" id="guidelines-detail">
@@ -836,7 +836,7 @@ function showBanner(type,msg){ const b=document.getElementById('alert-bar'); b.c
 function hideBanner(){ document.getElementById('alert-bar').className=''; }
 
 // ══════════════════════════════════════════════════════════
-// MEDS INLINE — ERC 2021 logic
+// MEDS INLINE — ERC 2025 logic
 // Non-shockable: adrenaline immediately
 // Shockable: adrenaline after 3rd shock, amio 300 after 3rd, amio 150 after 5th
 // ══════════════════════════════════════════════════════════
@@ -983,11 +983,11 @@ function setGuidelines(g){
   btnAHA.style.color=!isERC?'var(--red2)':'var(--text2)';
 
   if(isERC){
-    descEl.textContent='ERC 2021 — Adrénaline après le 3ème choc';
-    detailEl.textContent='Choc 1 → Choc 2 → Choc 3 + Adrénaline → Amiodarone 300mg → Choc 4 → Choc 5 + Amiodarone 150mg';
+    descEl.textContent='ERC 2025 — Adrénaline après le 3ème choc';
+    detailEl.textContent='Choc 1 → Choc 2 → Choc 3 → Adrénaline 1mg + Amiodarone 300mg → Choc 4 → Choc 5 + Amiodarone 150mg';
   } else {
-    descEl.textContent='AHA 2020 — Adrénaline après le 2ème choc';
-    detailEl.textContent='Choc 1 → Choc 2 + Adrénaline → Choc 3 + Amiodarone 300mg → Choc 4 → Choc 5 + Amiodarone 150mg';
+    descEl.textContent='AHA 2025 — Adrénaline après le 2ème choc';
+    detailEl.textContent='Choc 1 →VVP → Choc 2 → Adrénaline 1mg → Choc 3 → Amiodarone 300mg → Choc 4 → Choc 5 + Amiodarone 150mg';
   }
 
   // Recalcule l'affichage des meds si une réanimation est en cours

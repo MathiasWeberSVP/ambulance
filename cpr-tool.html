@@ -949,7 +949,6 @@ function adjDose(id, delta){
 function manualDrug(name, valId, unit){
   const dose=document.getElementById(valId).value;
   logEvent(name+' '+dose+' '+unit,'drug');
-  speak(name+' '+dose+' '+unit+' administré.');
   // Brief flash feedback
   const btn=event.target; const orig=btn.textContent;
   btn.textContent='✓'; setTimeout(()=>btn.textContent=orig,1200);
@@ -959,7 +958,6 @@ function manualOther(){
   const dose=document.getElementById('other-drug-dose').value.trim();
   if(!name) return;
   logEvent((name+(dose?' '+dose:'')),'drug');
-  speak((name+(dose?' '+dose:''))+' administré.');
   document.getElementById('other-drug-name').value='';
   document.getElementById('other-drug-dose').value='';
 }

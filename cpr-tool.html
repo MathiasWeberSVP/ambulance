@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="manifest.json">
+<title>CPR Assist</title>
+<style>
+:root{
+  --bg:#0a0a0a;--bg2:#141414;--bg3:#1e1e1e;--bg4:#2a2a2a;
+  --border:#333;
+  --text:#f0f0f0;--text2:#aaa;--text3:#555;
+  --red:#e83535;--red2:#ff6b6b;--red-bg:#2a1010;
+  --orange:#e87835;--orange2:#ffaa66;--orange-bg:#2a1808;
+  --green:#35c97a;--green2:#66ffaa;--green-bg:#0a2018;
+  --blue:#4da6ff;--blue2:#88ccff;--blue-bg:#0a1828;
+  --yellow:#f0c040;--yellow2:#ffe080;--yellow-bg:#2a2008;
+  --r:10px;--rlg:14px;
+  --hh:118px;--nh:60px;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+}
+html[data-theme=light]{
+  --bg:#f0f0f0;--bg2:#fff;--bg3:#e8e8e8;--bg4:#ddd;--border:#ccc;
+  --text:#111;--text2:#555;--text3:#999;
+  --red:#c0392b;--red2:#e74c3c;--red-bg:#fdecea;
+  --orange:#d35400;--orange2:#e67e22;--orange-bg:#fef0e6;
+  --green:#1a8a45;--green2:#27ae60;--green-bg:#e8f8ee;
+  --blue:#1a6fad;--blue2:#2980b9;--blue-bg:#e8f4fd;
+  --yellow:#b8860b;--yellow2:#d4a017;--yellow-bg:#fef9e6;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden;transition:background .3s,color .3s;}
+
+/* HEADER */
+#hdr{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);height:var(--hh);padding:10px 14px 8px;display:flex;flex-direction:column;gap:7px;transition:background .3s,border-color .3s;}
+.hr{display:flex;align-items:center;justify-content:space-between;}
+#main-timer{font-size:36px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-1.5px;line-height:1;}
+#timer-sub{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+#cycle-badge{font-size:11px;color:var(--blue2);margin-top:3px;font-variant-numeric:tabular-nums;min-height:16px;}
+.hright{display:flex;align-items:center;gap:8px;}
+.ibtn{width:38px;height:38px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.ibtn.muted{border-color:var(--red);color:var(--red2);}
+.ibtn.speech-on{border-color:var(--green);color:var(--green2);}
+#metro-num{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--red2);min-width:32px;text-align:right;line-height:1;}
+#metro-lbl{font-size:10px;color:var(--text3);text-align:right;}
+.dots-wrap{display:flex;gap:2px;align-items:center;}
+.dot{flex:1;height:9px;border-radius:2px;background:var(--bg4);transition:background .04s;}
+.dot.act{background:var(--red2);}
+.dot.done{background:var(--bg3);}
+#hdr.vent-pause #metro-num{color:var(--green2);}
+@keyframes aflash{0%,100%{background:var(--bg)}50%{background:var(--yellow-bg)}}
+#hdr.analysis-flash{animation:aflash .4s ease 3;}
+
+/* ALERT BANNER */
+#alert-bar{position:fixed;top:var(--hh);left:0;right:0;z-index:99;padding:9px 14px;font-size:13px;font-weight:700;text-align:center;transform:translateY(-110%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
+#alert-bar.show{transform:translateY(0);}
+#alert-bar.pre{background:var(--orange);color:#fff;}
+#alert-bar.analysis{background:var(--yellow);color:#000;}
+
+/* SCROLL */
+#main{position:fixed;top:var(--hh);bottom:var(--nh);left:0;right:0;overflow-y:auto;padding:10px 12px 20px;-webkit-overflow-scrolling:touch;}
+.tab{display:none;}
+.tab.active{display:block;}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rlg);padding:14px;margin-bottom:11px;transition:background .3s,border-color .3s;}
+.ctitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:11px;}
+
+/* RHYTHM */
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rcard{border:2px solid var(--border);border-radius:var(--r);padding:10px 6px 8px;cursor:pointer;text-align:center;background:var(--bg3);transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px;-webkit-user-select:none;user-select:none;}
+.rcard:active{transform:scale(.97);}
+.rname{font-size:14px;font-weight:700;}
+.rwave{width:64px;height:30px;}
+.rtag{font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 10px;border-radius:20px;margin-top:2px;}
+.rcard.shock{border-color:var(--red);}
+.rcard.shock .rtag{background:var(--red-bg);color:var(--red2);}
+.rcard.noshock{border-color:var(--green);}
+.rcard.noshock .rtag{background:var(--green-bg);color:var(--green2);}
+.rcard.sel.shock{background:var(--red-bg);}
+.rcard.sel.noshock{background:var(--green-bg);}
+
+/* ENERGY */
+.erow{display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding:10px 12px;background:var(--bg3);border-radius:var(--r);}
+.elabel{font-size:12px;color:var(--text2);}
+.ectrl{display:flex;align-items:center;gap:12px;}
+.ebtn{width:34px;height:34px;border-radius:50%;background:var(--bg4);border:1px solid var(--border);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#energy-val{font-size:26px;font-weight:700;color:var(--yellow2);}
+#shock-badge{text-align:center;font-size:11px;color:var(--text3);margin-top:6px;}
+
+/* CYCLE */
+#cycle-block{display:none;}
+.cycard{background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--rlg);padding:14px;margin-bottom:11px;}
+#cycle-time{font-size:52px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--blue2);text-align:center;line-height:1;letter-spacing:-1px;}
+#cycle-sub{font-size:11px;text-align:center;margin-top:4px;}
+/* overdue: cycle exceeded */
+#cycle-time.overdue{color:var(--red2);}
+#cycle-sub.overdue{color:var(--red2);}
+.cbar-wrap{height:5px;background:var(--bg4);border-radius:3px;margin-top:11px;}
+.cbar{height:5px;background:var(--blue2);border-radius:3px;transition:width .5s linear;width:0%;}
+#early-btn{width:100%;margin-top:9px;padding:9px;background:transparent;border:1px solid var(--blue);border-radius:var(--r);color:var(--blue2);font-size:13px;cursor:pointer;}
+
+/* MEDS INLINE */
+#meds-block{display:none;}
+.mcard{border-radius:var(--r);padding:13px;margin-bottom:10px;}
+.mcard:last-child{margin-bottom:0;}
+.mcard.adr{background:var(--orange-bg);border:1px solid var(--orange);}
+.mcard.amio{background:var(--blue-bg);border:1px solid var(--blue);}
+.mname{font-size:15px;font-weight:700;margin-bottom:2px;}
+.mdose{font-size:11px;color:var(--text2);margin-bottom:9px;}
+.mrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.mstatus{font-size:12px;color:var(--text2);}
+.mcd{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;}
+.mcd.overdue{color:var(--red2);}
+.mbtn{padding:9px 18px;border-radius:var(--r);border:none;font-size:14px;font-weight:700;cursor:pointer;}
+.mbtn:disabled{opacity:.4;cursor:default;}
+.abtn{background:var(--orange);color:#fff;}
+.xbtn{background:var(--blue);color:#fff;}
+/* force-give link */
+.force-link{font-size:11px;color:var(--text3);cursor:pointer;text-decoration:underline;display:block;margin-top:4px;}
+
+/* VENT */
+.trow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.trow:last-child{border-bottom:none;}
+.tname{font-size:14px;font-weight:500;}
+.tdesc{font-size:11px;color:var(--text3);margin-top:2px;}
+.tsw{width:48px;height:28px;background:var(--bg4);border-radius:14px;position:relative;cursor:pointer;border:1px solid var(--border);flex-shrink:0;transition:background .2s;}
+.tsw.on{background:var(--green);border-color:var(--green);}
+.tsw::after{content:'';position:absolute;width:22px;height:22px;background:var(--text3);border-radius:50%;top:2px;left:2px;transition:all .2s;}
+.tsw.on::after{left:22px;background:#fff;}
+
+/* MEDS TAB (manual) */
+.mdrug-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.mdrug-row:last-child{border-bottom:none;}
+.mdrug-info{flex:1;}
+.mdrug-name{font-size:14px;font-weight:600;}
+.mdrug-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.dose-ctrl{display:flex;align-items:center;gap:8px;margin-right:10px;}
+.dose-inp{width:52px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 4px;color:var(--text);font-size:14px;font-weight:700;}
+.give-btn{padding:7px 14px;border-radius:var(--r);border:none;font-size:13px;font-weight:700;cursor:pointer;background:var(--orange);color:#fff;white-space:nowrap;}
+.give-btn.blue{background:var(--blue);}
+
+/* LOGS */
+.lbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px;}
+.lbtn{padding:11px 6px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;cursor:pointer;text-align:center;}
+#stop-btn{width:100%;padding:13px;background:var(--red-bg);border:2px solid var(--red);border-radius:var(--r);color:var(--red2);font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.lentry{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.lentry:last-child{border-bottom:none;}
+.lt{color:var(--text3);font-size:11px;font-variant-numeric:tabular-nums;min-width:48px;padding-top:1px;}
+.lev{color:var(--text);font-size:12px;flex:1;line-height:1.4;}
+.ltag{font-size:10px;padding:2px 6px;border-radius:10px;flex-shrink:0;font-weight:600;}
+.ltag.shock{background:var(--red-bg);color:var(--red2);}
+.ltag.drug{background:var(--orange-bg);color:var(--orange2);}
+.ltag.access{background:var(--blue-bg);color:var(--blue2);}
+.ltag.airway{background:var(--green-bg);color:var(--green2);}
+.ltag.event{background:var(--bg4);color:var(--text2);}
+
+/* PARAMS */
+.prow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.prow:last-child{border-bottom:none;}
+.pname{font-size:14px;font-weight:500;}
+.pdesc{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* NAV */
+#nav{position:fixed;bottom:0;left:0;right:0;height:var(--nh);background:var(--bg);border-top:1px solid var(--border);display:flex;z-index:100;transition:background .3s,border-color .3s;}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text3);font-size:10px;border:none;background:none;}
+.nb .ni{font-size:22px;line-height:1;}
+.nb.on{color:var(--red2);}
+
+/* STOP OVERLAY */
+#stop-ov{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.9);align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:20px;}
+#stop-ov.show{display:flex;}
+#stop-ov h2{font-size:20px;font-weight:700;color:var(--red2);}
+#logs-export{width:100%;max-height:55vh;overflow-y:auto;background:var(--bg2);border-radius:var(--r);padding:12px;font-size:11px;font-family:monospace;white-space:pre-wrap;color:var(--text2);border:1px solid var(--border);}
+.so-btns{display:flex;gap:10px;width:100%;}
+.so-btns button{flex:1;padding:12px;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;border:none;}
+#copy-btn{background:var(--blue);color:#fff;}
+#close-so{background:var(--bg3);color:var(--text2);border:1px solid var(--border);}
+
+/* WAKE / PWA status pill */
+#status-bar{position:fixed;bottom:calc(var(--nh)+6px);right:10px;z-index:99;display:flex;gap:6px;}
+.spill{font-size:10px;padding:3px 8px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);color:var(--text3);}
+.spill.ok{border-color:var(--green);color:var(--green2);}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div class="hr">
+    <div>
+      <div id="main-timer">00:00</div>
+      <div id="timer-sub">Chronomètre</div>
+      <div id="cycle-badge"></div>
+    </div>
+    <div class="hright">
+      <div style="text-align:right">
+        <div id="metro-num">1</div>
+        <div id="metro-lbl">/ 30</div>
+      </div>
+      <button class="ibtn" id="speech-btn" onclick="toggleSpeech()" title="Synthèse vocale">🗣</button>
+      <button class="ibtn" id="sound-btn" onclick="toggleSound()" title="Son">🔊</button>
+    </div>
+  </div>
+  <div class="hr">
+    <div class="dots-wrap" id="mdots" style="flex:1"></div>
+  </div>
+</div>
+
+<div id="alert-bar"></div>
+
+<div id="main">
+
+  <!-- ── TAB RYTHME ── -->
+  <div class="tab active" id="tab-rhythm">
+
+    <div class="card">
+      <div class="ctitle">Rythme à l'analyse</div>
+      <div class="rgrid" id="rgrid">
+        <button class="rcard shock" data-r="FV" data-s="1" onclick="selectRhythm(this)">
+          <div class="rname" style="color:var(--red2)">FV</div>
+          <svg class="rwave" viewBox="0 0 64 30" fill="none"><polyline stroke="var(--red2)" stroke-width="1.5" stroke-linecap="round" points="0,15 4,15 6,7 8,23 10,4 12,26 14,9 16,21 18,11 20,23 22,7 24,25 26,11 28,19 30,15 34,15 36,9 38,21 40,7 42,23 44,9 46,19 48,15 52,15 58,15 64,15"/></svg>
+          <div class="rtag">CHOQUABLE</div>
+        </button>
+        <button class="rcard shock" data-r="TV" data-s="1" onclick="selectRhythm(this)">
+          <div class="rname" style="color:var(--orange2)">TV sans pouls</div>
+          <svg class="rwave" viewBox="0 0 64 30" fill="none"><polyline stroke="var(--orange2)" stroke-width="1.5" stroke-linecap="round" points="0,15 5,15 7,5 11,25 15,5 19,25 23,5 27,25 31,5 35,25 39,5 43,25 47,15 53,15 59,15 64,15"/></svg>
+          <div class="rtag">CHOQUABLE</div>
+        </button>
+        <button class="rcard noshock" data-r="AESP" data-s="0" onclick="selectRhythm(this)">
+          <div class="rname" style="color:var(--blue2)">AESP</div>
+          <svg class="rwave" viewBox="0 0 64 30" fill="none"><polyline stroke="var(--blue2)" stroke-width="1.5" stroke-linecap="round" points="0,20 8,20 10,20 11,7 12,20 13,12 15,20 22,20 24,20 25,7 26,20 27,12 29,20 36,20 38,20 39,7 40,20 41,12 43,20 50,20 52,20 53,7 54,20 55,12 57,20 64,20"/></svg>
+          <div class="rtag">NON CHOQUABLE</div>
+        </button>
+        <button class="rcard noshock" data-r="Asystole" data-s="0" onclick="selectRhythm(this)">
+          <div class="rname" style="color:var(--text2)">Asystole</div>
+          <svg class="rwave" viewBox="0 0 64 30" fill="none"><polyline stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round" points="0,15 8,15 10,14 12,16 14,15 64,15"/></svg>
+          <div class="rtag">NON CHOQUABLE</div>
+        </button>
+      </div>
+
+      <div class="erow" id="erow" style="display:none">
+        <div class="elabel">Énergie du prochain choc</div>
+        <div class="ectrl">
+          <button class="ebtn" onclick="changeEnergy(-1)">−</button>
+          <div style="display:flex;align-items:baseline;gap:3px">
+            <span id="energy-val">120</span><span style="font-size:12px;color:var(--text3)">J</span>
+          </div>
+          <button class="ebtn" onclick="changeEnergy(1)">+</button>
+        </div>
+      </div>
+      <div id="shock-badge" style="display:none;text-align:center;font-size:11px;color:var(--text3);margin-top:6px;"></div>
+    </div>
+
+    <!-- Cycle -->
+    <div id="cycle-block">
+      <div class="cycard">
+        <div class="ctitle" id="cycle-phase">RCP EN COURS</div>
+        <div id="cycle-time">2:00</div>
+        <div id="cycle-sub" style="color:var(--blue)">jusqu'à la prochaine analyse</div>
+        <div class="cbar-wrap"><div class="cbar" id="cbar"></div></div>
+        <button id="early-btn" onclick="triggerEarlyAnalysis()">🔍 Analyse précoce</button>
+      </div>
+    </div>
+
+    <!-- Meds inline -->
+    <div id="meds-block">
+      <div class="ctitle" style="padding:0 2px 6px">Médicaments</div>
+
+      <!-- Adrénaline -->
+      <div class="mcard adr" id="blk-adr" style="display:none">
+        <div class="mname" style="color:var(--orange2)">Adrénaline</div>
+        <div class="mdose" id="adr-dose-lbl">1 mg IV/IO — toutes les 3–5 min</div>
+        <div class="mrow">
+          <div class="mstatus" id="adr-status">Prête</div>
+          <div class="mcd" id="adr-cd"></div>
+        </div>
+        <button class="mbtn abtn" id="adr-btn" onclick="giveDrug('adr',false)">Administrer</button>
+        <span class="force-link" id="adr-force" style="display:none" onclick="giveDrug('adr',true)">Administrer maintenant (hors séquence)</span>
+      </div>
+
+      <!-- Amiodarone 300 -->
+      <div class="mcard amio" id="blk-amio300" style="display:none">
+        <div class="mname" style="color:var(--blue2)">Amiodarone</div>
+        <div class="mdose">300 mg IV — après le 3ème choc</div>
+        <div class="mrow">
+          <div class="mstatus" id="amio300-status">En attente du 3ème choc</div>
+        </div>
+        <button class="mbtn xbtn" id="amio300-btn" onclick="giveDrug('amio300',false)" disabled>Administrer 300 mg</button>
+        <span class="force-link" id="amio300-force" style="display:none" onclick="giveDrug('amio300',true)">Administrer maintenant (hors séquence)</span>
+      </div>
+
+      <!-- Amiodarone 150 -->
+      <div class="mcard amio" id="blk-amio150" style="display:none">
+        <div class="mname" style="color:var(--blue2)">Amiodarone — 2ème dose</div>
+        <div class="mdose">150 mg IV — après le 5ème choc</div>
+        <div class="mrow">
+          <div class="mstatus" id="amio150-status">En attente du 5ème choc</div>
+        </div>
+        <button class="mbtn xbtn" id="amio150-btn" onclick="giveDrug('amio150',false)" disabled>Administrer 150 mg</button>
+        <span class="force-link" id="amio150-force" style="display:none" onclick="giveDrug('amio150',true)">Administrer maintenant (hors séquence)</span>
+      </div>
+    </div>
+
+  </div><!-- /tab-rhythm -->
+
+  <!-- ── TAB MÉDICAMENTS MANUELS ── -->
+  <div class="tab" id="tab-meds">
+    <div class="card">
+      <div class="ctitle">Administration manuelle</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Utiliser si la réanimation était déjà en cours au lancement de l'app ou pour tout médicament hors séquence.</div>
+
+      <div class="mdrug-row">
+        <div class="mdrug-info">
+          <div class="mdrug-name" style="color:var(--orange2)">Adrénaline</div>
+          <div class="mdrug-sub">mg IV/IO</div>
+        </div>
+        <div class="dose-ctrl">
+          <button class="ebtn" onclick="adjDose('adr-m',-0.5)">−</button>
+          <input class="dose-inp" id="adr-m-val" type="number" value="1" min="0.5" max="5" step="0.5">
+          <button class="ebtn" onclick="adjDose('adr-m',0.5)">+</button>
+        </div>
+        <button class="give-btn" onclick="manualDrug('Adrénaline', 'adr-m-val', 'mg IV/IO')">Donner</button>
+      </div>
+
+      <div class="mdrug-row">
+        <div class="mdrug-info">
+          <div class="mdrug-name" style="color:var(--blue2)">Amiodarone</div>
+          <div class="mdrug-sub">mg IV</div>
+        </div>
+        <div class="dose-ctrl">
+          <button class="ebtn" onclick="adjDose('amio-m',-50)">−</button>
+          <input class="dose-inp" id="amio-m-val" type="number" value="300" min="50" max="600" step="50">
+          <button class="ebtn" onclick="adjDose('amio-m',50)">+</button>
+        </div>
+        <button class="give-btn blue" onclick="manualDrug('Amiodarone', 'amio-m-val', 'mg IV')">Donner</button>
+      </div>
+
+      <div class="mdrug-row">
+        <div class="mdrug-info">
+          <div class="mdrug-name">Autre médicament</div>
+          <div class="mdrug-sub"><input id="other-drug-name" placeholder="Nom" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 6px;color:var(--text);font-size:12px;width:100px"> <input id="other-drug-dose" placeholder="dose" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 6px;color:var(--text);font-size:12px;width:80px"></div>
+        </div>
+        <button class="give-btn" style="background:var(--bg4);color:var(--text)" onclick="manualOther()">Donner</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB VENTILATION ── -->
+  <div class="tab" id="tab-vent">
+    <div class="card">
+      <div class="ctitle">Ventilation</div>
+      <div class="trow">
+        <div><div class="tname">Mode 30 : 2</div><div class="tdesc">Métronome pause à 30 · 2 bips · reprend à 1</div></div>
+        <div class="tsw" id="sw-302" onclick="toggleVent('302')"></div>
+      </div>
+      <div class="trow">
+        <div><div class="tname">Ventilation continue</div><div class="tdesc">1 bip toutes les 6 secondes (post-IOT)</div></div>
+        <div class="tsw" id="sw-cont" onclick="toggleVent('cont')"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB LOGS ── -->
+  <div class="tab" id="tab-logs">
+    <div class="card">
+      <div class="ctitle">Enregistrement rapide</div>
+      <div class="lbtns">
+        <button class="lbtn" onclick="logEvent('Accès veineux','access')">💉 Accès veineux</button>
+        <button class="lbtn" onclick="logEvent('Accès osseux','access')">🦴 Accès osseux</button>
+        <button class="lbtn" onclick="logEvent('I-Gel posé','airway')">😮 I-Gel</button>
+        <button class="lbtn" onclick="logEvent('Intubation','airway')">🫁 Intubation</button>
+      </div>
+      <button id="stop-btn" onclick="showStop()">⛔ Arrêter la réanimation</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">Journal</div>
+      <div id="logs-list"><div style="color:var(--text3);font-size:13px">Aucun événement enregistré</div></div>
+    </div>
+  </div>
+
+  <!-- ── TAB PARAMS ── -->
+  <div class="tab" id="tab-params">
+    <div class="card">
+      <div class="ctitle">Paramètres</div>
+      <div class="prow"><div><div class="pname">Thème</div><div class="pdesc" id="theme-desc">Sombre (suit le système)</div></div><div class="tsw" id="sw-theme" onclick="toggleTheme()"></div></div>
+      <div class="prow"><div><div class="pname">Synthèse vocale</div><div class="pdesc" id="speech-desc">Désactivée</div></div><div class="tsw" id="sw-speech" onclick="toggleSpeech()"></div></div>
+      <div class="prow"><div><div class="pname">Mode 30:2 au démarrage</div><div class="pdesc">Activer 30:2 dès le lancement</div></div><div class="tsw" id="sw-302-def" onclick="toggleDefault302()"></div></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Statut système</div>
+      <div class="prow"><div><div class="pname">Wake Lock</div><div class="pdesc" id="wl-desc">Vérification…</div></div></div>
+      <div class="prow"><div><div class="pname">Mode hors ligne</div><div class="pdesc" id="sw-desc">Service Worker non enregistré</div></div></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Installation PWA</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">
+        <b>Android (Chrome)</b> : menu ⋮ → "Ajouter à l'écran d'accueil"<br>
+        <b>iOS (Safari)</b> : bouton Partager → "Sur l'écran d'accueil"<br><br>
+        <div style="color:var(--text3)">L'app fonctionnera hors ligne une fois les fichiers mis en cache.</div>
+      </div>
+      <button id="pwa-install-btn" style="display:none;width:100%;margin-top:10px;padding:11px;background:var(--green-bg);border:1px solid var(--green);border-radius:var(--r);color:var(--green2);font-size:14px;font-weight:700;cursor:pointer" onclick="installPWA()">📲 Installer l'application</button>
+    </div>
+    <div class="card" style="text-align:center;color:var(--text3);font-size:12px">CPR Assist v4.0 — ERC 2021</div>
+  </div>
+
+</div><!-- /main -->
+
+<nav id="nav">
+  <button class="nb on" onclick="showTab('rhythm',this)"><span class="ni">❤️</span>Rythme</button>
+  <button class="nb" onclick="showTab('meds',this)"><span class="ni">💊</span>Médic.</button>
+  <button class="nb" onclick="showTab('vent',this)"><span class="ni">💨</span>Ventil.</button>
+  <button class="nb" onclick="showTab('logs',this)"><span class="ni">📋</span>Logs</button>
+  <button class="nb" onclick="showTab('params',this)"><span class="ni">⚙️</span>Params</button>
+</nav>
+
+<div id="stop-ov">
+  <h2>Arrêt de réanimation</h2>
+  <div id="logs-export"></div>
+  <div class="so-btns">
+    <button id="copy-btn" onclick="copyLogs()">📋 Copier</button>
+    <button id="close-so" onclick="closeStop()">Continuer</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+const S={
+  startTime:Date.now(),
+  soundOn:true, speechOn:false, lightTheme:false, default302:false,
+  _themeManual:false,
+
+  // AudioContext metronome
+  AC:null,
+  METRO_BPM:110,
+  metroTick:0,       // 0-29 display counter
+  metroNextBeat:0,   // AC time of next scheduled beat
+  metroScheduler:null,
+  metroPaused:false, // 30:2 vent pause flag
+  ventPauseUntil:0,  // AC time when pause ends
+
+  vent302:false, ventCont:false, ventContInterval:null,
+
+  currentRhythm:null, isShockable:false,
+  shockCount:0,
+  energyLevels:[120,150,200], energyIdx:0,
+
+  cycleActive:false, cycleStart:0, CYCLE_S:120,
+  cycleInterval:null, preAlertFired:false,
+  // overdue tracking
+  cycleOverdue:false, cycleOverdueStart:0,
+
+  // adrenaline
+  adrActive:false, adrStart:0, adrInterval:null, ADR_S:180,
+  adrDueAt:0, // timestamp when next adr is due
+  adrOverdue:false,
+
+  amio300Given:false, amio150Given:false,
+
+  wakeLock:null,
+  logs:[],
+  pwaPrompt:null,
+};
+
+// ══════════════════════════════════════════════════════════
+// AUDIO — AudioContext clock metronome
+// The key insight: schedule beats ahead on the AC timeline
+// (not on JS timeline) — completely immune to JS throttling.
+// ══════════════════════════════════════════════════════════
+function getAC(){
+  if(!S.AC) S.AC=new(window.AudioContext||window.webkitAudioContext)();
+  return S.AC;
+}
+// Unlock audio on first gesture
+['touchstart','click','keydown'].forEach(ev=>
+  document.addEventListener(ev,()=>{try{getAC().resume();}catch(_){}},{once:true,passive:true})
+);
+
+// Play a composite tone at exact AC time t
+function scheduleTone(freq,dur,vol,type,t,freq2,vol2){
+  if(!S.soundOn) return;
+  try{
+    const ac=getAC();
+    const play=(f,v,tp)=>{
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type=tp||'sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(v,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+      o.start(t); o.stop(t+dur+0.05);
+    };
+    play(freq,vol,type);
+    if(freq2) play(freq2,vol2||vol*0.4,'sine');
+  }catch(_){}
+}
+
+// Schedule a vent bip at AC time t
+function scheduleVent(t){
+  scheduleTone(330,0.9,0.38,'sine',t,495,0.13);
+}
+
+// Lookahead scheduler — runs every 25ms, schedules beats 100ms ahead
+// This means JS throttling (which delays by up to 1s in background)
+// has ZERO effect on audio timing.
+const LOOKAHEAD=0.1;   // seconds ahead to schedule
+const SCHED_INTERVAL=25; // ms
+
+function startMetro(){
+  const ac=getAC();
+  S.metroNextBeat=ac.currentTime+0.05;
+  S.metroScheduler=setInterval(metroSchedulerTick, SCHED_INTERVAL);
+}
+
+function metroSchedulerTick(){
+  const ac=getAC();
+  const beatDur=60/S.METRO_BPM;
+
+  while(S.metroNextBeat < ac.currentTime + LOOKAHEAD){
+    const t=S.metroNextBeat;
+
+    // Check if we're in a vent pause
+    if(S.metroPaused && t < S.ventPauseUntil){
+      S.metroNextBeat += beatDur;
+      continue; // skip this beat silently
+    }
+    if(S.metroPaused && t >= S.ventPauseUntil){
+      S.metroPaused=false;
+    }
+
+    // Schedule the metro click
+    scheduleTone(880,0.04,0.28,'sine',t,1320,0.10);
+
+    // Capture tick index for display update
+    const tickIdx=S.metroTick;
+    const delayMs=(t - ac.currentTime)*1000;
+    setTimeout(()=>updateMetroDisplay(tickIdx), Math.max(0,delayMs));
+
+    // 30:2 — after beat 29 (the 30th), pause for ventilations
+    if(S.vent302 && S.metroTick===29){
+      S.metroPaused=true;
+      // vent 1 at +150ms, vent 2 at +1450ms, resume at +2600ms
+      const v1=t+0.15, v2=t+1.45;
+      scheduleVent(v1);
+      scheduleVent(v2);
+      S.ventPauseUntil=t+2.6;
+      // Reset tick display at resume
+      const resumeDelay=(S.ventPauseUntil - ac.currentTime)*1000;
+      setTimeout(()=>{
+        document.getElementById('hdr').classList.remove('vent-pause');
+        S.metroTick=0;
+      }, Math.max(0,resumeDelay));
+      // Show vent indicator
+      const pauseDelay=(t - ac.currentTime)*1000;
+      setTimeout(()=>document.getElementById('hdr').classList.add('vent-pause'), Math.max(0,pauseDelay+550));
+    }
+
+    S.metroTick=(S.metroTick+1)%30;
+    S.metroNextBeat+=beatDur;
+  }
+}
+
+function updateMetroDisplay(idx){
+  document.getElementById('metro-num').textContent=idx+1;
+  for(let i=0;i<30;i++){
+    const d=document.getElementById('d'+i);
+    if(!d) return;
+    d.className='dot'+(i<idx?' done':i===idx?' act':'');
+  }
+}
+
+// Non-metro sounds (not time-critical, plain scheduling)
+function sndPreAlert(){ scheduleTone(660,0.18,0.5,'sine',getAC().currentTime); scheduleTone(880,0.18,0.5,'sine',getAC().currentTime+0.25); }
+function sndAnalysis(){ const t=getAC().currentTime; scheduleTone(660,0.15,0.55,'sine',t); scheduleTone(880,0.15,0.55,'sine',t+0.22); scheduleTone(1100,0.2,0.6,'sine',t+0.44); }
+function sndShock(){ const t=getAC().currentTime; scheduleTone(120,0.12,0.7,'sawtooth',t); scheduleTone(60,0.28,0.4,'sine',t+0.02); }
+function sndReady(){ const t=getAC().currentTime; scheduleTone(550,0.15,0.45,'sine',t); scheduleTone(770,0.15,0.45,'sine',t+0.22); }
+
+// ══════════════════════════════════════════════════════════
+// SPEECH
+// ══════════════════════════════════════════════════════════
+function speak(txt){
+  if(!S.speechOn||!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang='fr-FR'; u.rate=1.05; u.pitch=1;
+  const fr=speechSynthesis.getVoices().find(v=>v.lang.startsWith('fr'));
+  if(fr) u.voice=fr;
+  speechSynthesis.speak(u);
+}
+if(window.speechSynthesis) speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
+
+// ══════════════════════════════════════════════════════════
+// DOTS INIT
+// ══════════════════════════════════════════════════════════
+function initDots(){
+  const w=document.getElementById('mdots'); w.innerHTML='';
+  for(let i=0;i<30;i++){const d=document.createElement('div');d.className='dot';d.id='d'+i;w.appendChild(d);}
+}
+
+// ══════════════════════════════════════════════════════════
+// MAIN TIMER
+// ══════════════════════════════════════════════════════════
+function fmt(s){s=Math.abs(Math.floor(s));const m=Math.floor(s/60);return`${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
+function fmtOverdue(s){return`+${fmt(s)}`;}
+function elapsed(){return(Date.now()-S.startTime)/1000;}
+setInterval(()=>document.getElementById('main-timer').textContent=fmt(elapsed()),500);
+
+// ══════════════════════════════════════════════════════════
+// RHYTHM SELECTION
+// ══════════════════════════════════════════════════════════
+function selectRhythm(btn){
+  const rhythm=btn.dataset.r, shockable=btn.dataset.s==='1';
+  S.currentRhythm=rhythm; S.isShockable=shockable;
+  document.querySelectorAll('.rcard').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  if(shockable){
+    recordShock();
+  } else {
+    logEvent('Rythme: '+rhythm+' (non-choquable)','event');
+    updateMedsInline();
+    startCycle();
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// SHOCK (auto on shockable rhythm select)
+// ══════════════════════════════════════════════════════════
+function recordShock(){
+  S.shockCount++;
+  const energy=S.energyLevels[S.energyIdx];
+  if(S.energyIdx<S.energyLevels.length-1) S.energyIdx++;
+  document.getElementById('energy-val').textContent=S.energyLevels[S.energyIdx];
+
+  logEvent('Choc n°'+S.shockCount+' — '+energy+' J','shock');
+  sndShock();
+  speak('Choc '+S.shockCount+' délivré, '+energy+' joules. Reprendre le massage.');
+
+  const b=document.getElementById('shock-badge');
+  b.style.display='block';
+  b.textContent=S.shockCount+' choc'+(S.shockCount>1?'s':'')+' · prochain: '+S.energyLevels[S.energyIdx]+' J';
+
+  document.getElementById('erow').style.display='flex';
+  updateMedsInline();
+  startCycle();
+}
+
+function changeEnergy(d){
+  S.energyIdx=Math.max(0,Math.min(S.energyLevels.length-1,S.energyIdx+d));
+  document.getElementById('energy-val').textContent=S.energyLevels[S.energyIdx];
+}
+
+// ══════════════════════════════════════════════════════════
+// CYCLE
+// ══════════════════════════════════════════════════════════
+function startCycle(){
+  S.cycleActive=true; S.cycleStart=Date.now();
+  S.preAlertFired=false; S.cycleOverdue=false;
+  document.getElementById('cycle-block').style.display='block';
+  hideRhythmGrid(true);
+  if(S.cycleInterval) clearInterval(S.cycleInterval);
+  S.cycleInterval=setInterval(updateCycle,500);
+  updateCycle();
+}
+
+function updateCycle(){
+  const el=(Date.now()-S.cycleStart)/1000;
+  const rem=S.CYCLE_S-el;
+  const pct=Math.min(100,(el/S.CYCLE_S)*100);
+  const timeEl=document.getElementById('cycle-time');
+  const subEl=document.getElementById('cycle-sub');
+  const cbarEl=document.getElementById('cbar');
+
+  if(rem>0){
+    timeEl.textContent=fmt(rem);
+    timeEl.className='';
+    subEl.textContent='jusqu\'à la prochaine analyse';
+    subEl.className='';
+    subEl.style.color='var(--blue)';
+    cbarEl.style.width=pct+'%';
+    document.getElementById('cycle-badge').textContent='Analyse dans '+fmt(rem);
+    if(rem<=15&&!S.preAlertFired){S.preAlertFired=true;firePreAlert();}
+  } else {
+    // Overdue
+    if(!S.cycleOverdue){
+      S.cycleOverdue=true; S.cycleOverdueStart=Date.now();
+      fireAnalysis();
+    }
+    const overdue=(Date.now()-S.cycleOverdueStart)/1000;
+    timeEl.textContent=fmtOverdue(overdue);
+    timeEl.className='overdue';
+    subEl.textContent='⚠ ANALYSE EN RETARD';
+    subEl.className='overdue';
+    subEl.style.color='';
+    cbarEl.style.width='100%';
+    cbarEl.style.background='var(--red2)';
+    document.getElementById('cycle-badge').textContent='⚠ Analyse +'+fmt(overdue);
+  }
+}
+
+function hideRhythmGrid(h){ document.getElementById('rgrid').style.display=h?'none':'grid'; }
+
+function firePreAlert(){
+  sndPreAlert();
+  speak('Préparer la précharge. Analyse dans quinze secondes.');
+  showBanner('pre','⏱ Préparer la précharge — Analyse dans 15 s');
+  hideRhythmGrid(false);
+  setTimeout(()=>hideBanner(),13500);
+}
+
+function fireAnalysis(){
+  sndAnalysis();
+  speak('Analyse du rythme. Stopper les compressions.');
+  showBanner('analysis','🔍 ANALYSE DU RYTHME — Stopper les compressions');
+  document.getElementById('hdr').classList.add('analysis-flash');
+  setTimeout(()=>document.getElementById('hdr').classList.remove('analysis-flash'),1400);
+  hideRhythmGrid(false);
+  document.getElementById('erow').style.display='flex';
+  setTimeout(()=>hideBanner(),8000);
+  // DON'T stop the interval — keep showing overdue timer
+}
+
+function triggerEarlyAnalysis(){
+  // Don't stop cycle interval — we just signal analysis now
+  S.preAlertFired=true;
+  fireAnalysis();
+}
+
+function showBanner(type,msg){ const b=document.getElementById('alert-bar'); b.className='show '+type; b.textContent=msg; }
+function hideBanner(){ document.getElementById('alert-bar').className=''; }
+
+// ══════════════════════════════════════════════════════════
+// MEDS INLINE — ERC 2021 logic
+// Non-shockable: adrenaline immediately
+// Shockable: adrenaline after 3rd shock, amio 300 after 3rd, amio 150 after 5th
+// ══════════════════════════════════════════════════════════
+function updateMedsInline(){
+  const mb=document.getElementById('meds-block');
+
+  if(!S.currentRhythm){ mb.style.display='none'; return; }
+  mb.style.display='block';
+
+  if(!S.isShockable){
+    // Non-shockable: show adrenaline, hide amio
+    document.getElementById('blk-adr').style.display='block';
+    document.getElementById('blk-amio300').style.display='none';
+    document.getElementById('blk-amio150').style.display='none';
+    // Enable adr if not actively counting down
+    if(!S.adrActive){
+      document.getElementById('adr-btn').disabled=false;
+      document.getElementById('adr-status').textContent='Prête';
+    }
+    document.getElementById('adr-force').style.display='none';
+  } else {
+    // Shockable: adr after 3rd shock
+    document.getElementById('blk-adr').style.display=S.shockCount>=3?'block':'none';
+    if(S.shockCount>=3 && !S.adrActive){
+      document.getElementById('adr-btn').disabled=false;
+      document.getElementById('adr-status').textContent=S.shockCount===3?'Indiquée (3ème choc)':'Prête';
+    }
+    if(S.shockCount<3){
+      // Still show with force link so it can be given early if needed
+      document.getElementById('blk-adr').style.display='block';
+      document.getElementById('adr-btn').disabled=true;
+      document.getElementById('adr-status').textContent='Après le 3ème choc ('+S.shockCount+'/3)';
+      document.getElementById('adr-force').style.display='block';
+    } else {
+      document.getElementById('adr-force').style.display='none';
+    }
+
+    // Amio 300 — show always for shockable, locked until 3rd shock
+    document.getElementById('blk-amio300').style.display=S.amio300Given?'none':'block';
+    if(!S.amio300Given){
+      if(S.shockCount>=3){
+        document.getElementById('amio300-btn').disabled=false;
+        document.getElementById('amio300-status').textContent=S.shockCount===3?'Indiquée (3ème choc)':'Disponible';
+        document.getElementById('amio300-force').style.display='none';
+      } else {
+        document.getElementById('amio300-btn').disabled=true;
+        document.getElementById('amio300-status').textContent='Après le 3ème choc ('+S.shockCount+'/3)';
+        document.getElementById('amio300-force').style.display='block';
+      }
+    }
+
+    // Amio 150 — only appears after amio 300 given, until 5th shock
+    if(S.amio300Given && !S.amio150Given){
+      document.getElementById('blk-amio150').style.display='block';
+      if(S.shockCount>=5){
+        document.getElementById('amio150-btn').disabled=false;
+        document.getElementById('amio150-status').textContent=S.shockCount===5?'Indiquée (5ème choc)':'Disponible';
+        document.getElementById('amio150-force').style.display='none';
+      } else {
+        document.getElementById('amio150-btn').disabled=true;
+        document.getElementById('amio150-status').textContent='Après le 5ème choc ('+S.shockCount+'/5)';
+        document.getElementById('amio150-force').style.display='block';
+      }
+    } else if(S.amio150Given){
+      document.getElementById('blk-amio150').style.display='none';
+    }
+  }
+}
+
+function giveDrug(drug, force){
+  if(drug==='adr'){
+    if(S.adrActive && !force) return;
+    if(force && S.adrActive){ clearInterval(S.adrInterval); }
+    S.adrActive=true; S.adrStart=Date.now();
+    S.adrOverdue=false;
+    logEvent('Adrénaline 1 mg IV/IO','drug');
+    speak('Adrénaline administrée.');
+    document.getElementById('adr-btn').disabled=true;
+    document.getElementById('adr-force').style.display='none';
+    document.getElementById('adr-status').textContent='Administrée';
+    if(S.adrInterval) clearInterval(S.adrInterval);
+    S.adrInterval=setInterval(updateAdr,500);
+  } else if(drug==='amio300'){
+    if(S.amio300Given) return;
+    S.amio300Given=true;
+    logEvent('Amiodarone 300 mg IV','drug');
+    speak('Amiodarone trois cents milligrammes administrée.');
+    updateMedsInline();
+  } else if(drug==='amio150'){
+    if(S.amio150Given) return;
+    S.amio150Given=true;
+    logEvent('Amiodarone 150 mg IV','drug');
+    speak('Amiodarone cent cinquante milligrammes administrée.');
+    updateMedsInline();
+  }
+}
+
+function updateAdr(){
+  const el=(Date.now()-S.adrStart)/1000;
+  const rem=S.ADR_S-el;
+  const cd=document.getElementById('adr-cd');
+  const statusEl=document.getElementById('adr-status');
+
+  if(rem>0){
+    cd.textContent=fmt(rem);
+    cd.className='mcd'+(rem<30?' overdue':'');
+    cd.style.color=rem<30?'var(--red2)':'var(--orange2)';
+    S.adrOverdue=false;
+  } else {
+    if(!S.adrOverdue){
+      S.adrOverdue=true;
+      sndReady();
+      speak('Adrénaline prête à administrer.');
+    }
+    const overdue=el-S.ADR_S;
+    cd.textContent=fmtOverdue(overdue);
+    cd.className='mcd overdue';
+    cd.style.color='var(--red2)';
+    statusEl.textContent='En retard!';
+    document.getElementById('adr-btn').disabled=false;
+    S.adrActive=false;
+    clearInterval(S.adrInterval);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// MANUAL DRUGS TAB
+// ══════════════════════════════════════════════════════════
+function adjDose(id, delta){
+  const el=document.getElementById(id+'-val');
+  el.value=Math.max(parseFloat(el.min||0), Math.min(parseFloat(el.max||9999), parseFloat(el.value)+delta));
+}
+function manualDrug(name, valId, unit){
+  const dose=document.getElementById(valId).value;
+  logEvent(name+' '+dose+' '+unit,'drug');
+  speak(name+' '+dose+' '+unit+' administré.');
+  // Brief flash feedback
+  const btn=event.target; const orig=btn.textContent;
+  btn.textContent='✓'; setTimeout(()=>btn.textContent=orig,1200);
+}
+function manualOther(){
+  const name=document.getElementById('other-drug-name').value.trim();
+  const dose=document.getElementById('other-drug-dose').value.trim();
+  if(!name) return;
+  logEvent((name+(dose?' '+dose:'')),'drug');
+  speak((name+(dose?' '+dose:''))+' administré.');
+  document.getElementById('other-drug-name').value='';
+  document.getElementById('other-drug-dose').value='';
+}
+
+// ══════════════════════════════════════════════════════════
+// VENTILATION
+// ══════════════════════════════════════════════════════════
+function toggleVent(mode){
+  if(mode==='302'){
+    S.vent302=!S.vent302; S.ventCont=false;
+    if(S.ventContInterval){clearInterval(S.ventContInterval);S.ventContInterval=null;}
+    document.getElementById('sw-302').classList.toggle('on',S.vent302);
+    document.getElementById('sw-cont').classList.remove('on');
+  } else {
+    S.ventCont=!S.ventCont; S.vent302=false;
+    document.getElementById('sw-cont').classList.toggle('on',S.ventCont);
+    document.getElementById('sw-302').classList.remove('on');
+    if(S.ventCont){
+      const t=getAC().currentTime;
+      scheduleVent(t);
+      S.ventContInterval=setInterval(()=>scheduleVent(getAC().currentTime+0.01),6000);
+    } else {
+      if(S.ventContInterval){clearInterval(S.ventContInterval);S.ventContInterval=null;}
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// LOGS
+// ══════════════════════════════════════════════════════════
+function logEvent(label,type){
+  const el=elapsed(), now=new Date();
+  const hms=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  S.logs.push({el,hms,label,type});
+  renderLogs();
+}
+function renderLogs(){
+  const list=document.getElementById('logs-list');
+  if(!S.logs.length){list.innerHTML='<div style="color:var(--text3);font-size:13px">Aucun événement</div>';return;}
+  list.innerHTML=S.logs.slice().reverse().map(l=>
+    `<div class="lentry"><div class="lt">${fmt(l.el)}</div><div class="lev">${l.hms} — ${l.label}</div><div class="ltag ${l.type}">${l.type.toUpperCase()}</div></div>`
+  ).join('');
+}
+function showStop(){
+  const lines=['CPR Assist — Rapport','Durée : '+fmt(elapsed()),'Chocs : '+S.shockCount,'','─── Journal ───'];
+  S.logs.forEach(l=>lines.push(`${l.hms}  [${fmt(l.el)}]  ${l.label}`));
+  document.getElementById('logs-export').textContent=lines.join('\n');
+  document.getElementById('stop-ov').classList.add('show');
+}
+function closeStop(){document.getElementById('stop-ov').classList.remove('show');}
+function copyLogs(){
+  const t=document.getElementById('logs-export').textContent;
+  navigator.clipboard.writeText(t).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);});
+  document.getElementById('copy-btn').textContent='✅ Copié';
+  setTimeout(()=>document.getElementById('copy-btn').textContent='📋 Copier',2000);
+}
+
+// ══════════════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════════════
+function showTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ══════════════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════════════
+function toggleSound(){
+  S.soundOn=!S.soundOn;
+  const b=document.getElementById('sound-btn');
+  b.textContent=S.soundOn?'🔊':'🔇';
+  b.classList.toggle('muted',!S.soundOn);
+  if(S.soundOn) getAC().resume();
+}
+function toggleSpeech(){
+  S.speechOn=!S.speechOn;
+  document.getElementById('speech-btn').classList.toggle('speech-on',S.speechOn);
+  document.getElementById('sw-speech').classList.toggle('on',S.speechOn);
+  document.getElementById('speech-desc').textContent=S.speechOn?'Activée':'Désactivée';
+  if(S.speechOn) speak('Synthèse vocale activée.');
+}
+function toggleTheme(){
+  S.lightTheme=!S.lightTheme; S._themeManual=true;
+  document.documentElement.setAttribute('data-theme',S.lightTheme?'light':'');
+  document.getElementById('sw-theme').classList.toggle('on',S.lightTheme);
+  document.getElementById('theme-desc').textContent=S.lightTheme?'Clair':'Sombre';
+}
+function toggleDefault302(){
+  S.default302=!S.default302;
+  document.getElementById('sw-302-def').classList.toggle('on',S.default302);
+  S.vent302=S.default302;
+  document.getElementById('sw-302').classList.toggle('on',S.vent302);
+}
+
+// ══════════════════════════════════════════════════════════
+// WAKE LOCK
+// ══════════════════════════════════════════════════════════
+async function requestWakeLock(){
+  if(!('wakeLock' in navigator)){
+    document.getElementById('wl-desc').textContent='Non supporté sur cet appareil';
+    return;
+  }
+  try{
+    S.wakeLock=await navigator.wakeLock.request('screen');
+    document.getElementById('wl-desc').textContent='Actif — écran maintenu allumé ✓';
+    S.wakeLock.addEventListener('release',()=>{
+      document.getElementById('wl-desc').textContent='Libéré (app en arrière-plan)';
+    });
+  }catch(e){
+    document.getElementById('wl-desc').textContent='Refusé par le navigateur';
+  }
+}
+// Re-acquire wake lock when page becomes visible again
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && !S.wakeLock) requestWakeLock();
+});
+
+// ══════════════════════════════════════════════════════════
+// SERVICE WORKER
+// ══════════════════════════════════════════════════════════
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(()=>{
+    document.getElementById('sw-desc').textContent='Hors ligne activé ✓';
+  }).catch(()=>{
+    document.getElementById('sw-desc').textContent='Erreur d\'enregistrement (fichier local ?)';
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// PWA INSTALL
+// ══════════════════════════════════════════════════════════
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); S.pwaPrompt=e;
+  document.getElementById('pwa-install-btn').style.display='block';
+});
+function installPWA(){
+  if(S.pwaPrompt){ S.pwaPrompt.prompt(); S.pwaPrompt.userChoice.then(()=>S.pwaPrompt=null); }
+}
+
+// ══════════════════════════════════════════════════════════
+// SYSTEM THEME
+// ══════════════════════════════════════════════════════════
+if(window.matchMedia){
+  const mq=window.matchMedia('(prefers-color-scheme: light)');
+  if(mq.matches){
+    S.lightTheme=true;
+    document.documentElement.setAttribute('data-theme','light');
+    document.getElementById('sw-theme').classList.add('on');
+    document.getElementById('theme-desc').textContent='Clair (système)';
+  }
+  mq.addEventListener('change',e=>{
+    if(!S._themeManual){
+      S.lightTheme=e.matches;
+      document.documentElement.setAttribute('data-theme',e.matches?'light':'');
+      document.getElementById('sw-theme').classList.toggle('on',e.matches);
+      document.getElementById('theme-desc').textContent=e.matches?'Clair (système)':'Sombre (système)';
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+function init(){
+  initDots();
+  startMetro();
+  requestWakeLock();
+  logEvent('Réanimation démarrée','event');
+}
+init();
+</script>
+</body>
+</html>

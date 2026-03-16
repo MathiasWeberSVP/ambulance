@@ -457,6 +457,28 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   <!-- ── TAB PARAMS ── -->
   <div class="tab" id="tab-params">
     <div class="card">
+      <div class="ctitle">Protocole de référence</div>
+      <div class="prow">
+        <div>
+          <div class="pname">Guidelines</div>
+          <div class="pdesc" id="guidelines-desc">ERC 2021 — Adrénaline après le 3ème choc</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button id="btn-erc" onclick="setGuidelines('ERC')"
+          style="flex:1;padding:10px;border-radius:var(--r);border:2px solid var(--blue);background:var(--blue-bg);color:var(--blue2);font-size:13px;font-weight:700;cursor:pointer">
+          ERC 2021
+        </button>
+        <button id="btn-aha" onclick="setGuidelines('AHA')"
+          style="flex:1;padding:10px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer">
+          AHA 2020
+        </button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5" id="guidelines-detail">
+        Choc 1 → Choc 2 → Choc 3 + Adrénaline → Amiodarone 300mg → Choc 4 → Choc 5 + Amiodarone 150mg
+      </div>
+    </div>
+    <div class="card">
       <div class="ctitle">Paramètres</div>
       <div class="prow"><div><div class="pname">Thème</div><div class="pdesc" id="theme-desc">Sombre (suit le système)</div></div><div class="tsw" id="sw-theme" onclick="toggleTheme()"></div></div>
       <div class="prow"><div><div class="pname">Synthèse vocale</div><div class="pdesc" id="speech-desc">Désactivée</div></div><div class="tsw" id="sw-speech" onclick="toggleSpeech()"></div></div>
@@ -513,6 +535,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 const S={
   startTime:Date.now(),
   soundOn:true, speechOn:false, lightTheme:false, default302:false,
+  guidelines:'ERC',
   _themeManual:false,
 
   // AudioContext metronome
@@ -836,16 +859,16 @@ function updateMedsInline(){
     document.getElementById('adr-force').style.display='none';
   } else {
     // Shockable: adr after 3rd shock
-    document.getElementById('blk-adr').style.display=S.shockCount>=3?'block':'none';
-    if(S.shockCount>=3 && !S.adrActive){
+      const adrThreshold=S.guidelines==='AHA'?2:3;
+      document.getElementById('blk-adr').style.display=S.shockCount>=adrThreshold?'block':'none';    
+      if(S.shockCount>=adrThreshold && !S.adrActive){
       document.getElementById('adr-btn').disabled=false;
       document.getElementById('adr-status').textContent=S.shockCount===3?'Indiquée (3ème choc)':'Prête';
     }
-    if(S.shockCount<3){
-      // Still show with force link so it can be given early if needed
+    if(S.shockCount<adrThreshold){
       document.getElementById('blk-adr').style.display='block';
       document.getElementById('adr-btn').disabled=true;
-      document.getElementById('adr-status').textContent='Après le 3ème choc ('+S.shockCount+'/3)';
+      document.getElementById('adr-status').textContent=`Après le ${adrThreshold}ème choc (${S.shockCount}/${adrThreshold})`;
       document.getElementById('adr-force').style.display='block';
     } else {
       document.getElementById('adr-force').style.display='none';
@@ -937,6 +960,38 @@ function updateAdr(){
     cd.style.color='var(--red2)';
     // DON'T set adrActive=false or clearInterval here — keep ticking
   }
+}
+// ══════════════════════════════════════════════════════════
+// Guidelines
+// ══════════════════════════════════════════════════════════
+function setGuidelines(g){
+  S.guidelines=g;
+  savePrefs();
+
+  const isERC=g==='ERC';
+  const descEl=document.getElementById('guidelines-desc');
+  const detailEl=document.getElementById('guidelines-detail');
+  const btnERC=document.getElementById('btn-erc');
+  const btnAHA=document.getElementById('btn-aha');
+
+  // Boutons actif/inactif
+  btnERC.style.border=isERC?'2px solid var(--blue)':'1px solid var(--border)';
+  btnERC.style.background=isERC?'var(--blue-bg)':'var(--bg3)';
+  btnERC.style.color=isERC?'var(--blue2)':'var(--text2)';
+  btnAHA.style.border=!isERC?'2px solid var(--red)':'1px solid var(--border)';
+  btnAHA.style.background=!isERC?'var(--red-bg)':'var(--bg3)';
+  btnAHA.style.color=!isERC?'var(--red2)':'var(--text2)';
+
+  if(isERC){
+    descEl.textContent='ERC 2021 — Adrénaline après le 3ème choc';
+    detailEl.textContent='Choc 1 → Choc 2 → Choc 3 + Adrénaline → Amiodarone 300mg → Choc 4 → Choc 5 + Amiodarone 150mg';
+  } else {
+    descEl.textContent='AHA 2020 — Adrénaline après le 2ème choc';
+    detailEl.textContent='Choc 1 → Choc 2 + Adrénaline → Choc 3 + Amiodarone 300mg → Choc 4 → Choc 5 + Amiodarone 150mg';
+  }
+
+  // Recalcule l'affichage des meds si une réanimation est en cours
+  updateMedsInline();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1143,6 +1198,7 @@ function savePrefs(){
     speechOn: S.speechOn,
     lightTheme: S.lightTheme,
     themeManual: S._themeManual,
+    guidelines: S.guidelines,
   }));
 }
 function loadPrefs(){
@@ -1153,6 +1209,7 @@ function loadPrefs(){
     if(p.themeManual && p.lightTheme!==undefined){
       S.lightTheme=p.lightTheme; S._themeManual=true;
     }
+    if(p.guidelines) S.guidelines=p.guidelines;
   }catch(_){}
 }
 
@@ -1161,6 +1218,7 @@ function loadPrefs(){
 // ══════════════════════════════════════════════════════════
 function init(){
   loadPrefs();
+  setGuidelines(S.guidelines);
   // Appliquer les prefs au DOM
   if(S.lightTheme && S._themeManual){
     document.documentElement.setAttribute('data-theme','light');

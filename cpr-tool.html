@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -962,7 +962,6 @@ function toggleSpeech(){
   document.getElementById('speech-btn').classList.toggle('speech-on',S.speechOn);
   document.getElementById('sw-speech').classList.toggle('on',S.speechOn);
   document.getElementById('speech-desc').textContent=S.speechOn?'Activée':'Désactivée';
-  if(S.speechOn) speak('Synthèse vocale activée.');
 }
 function toggleTheme(){
   S.lightTheme=!S.lightTheme; S._themeManual=true;

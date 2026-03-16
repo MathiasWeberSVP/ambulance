@@ -637,7 +637,6 @@ function recordShock(){
 
   logEvent('Choc n°'+S.shockCount+' — '+energy+' J','shock');
   sndShock();
-  speak('Choc '+S.shockCount+' délivré, '+energy+' joules. Reprendre le massage.');
 
   const b=document.getElementById('shock-badge');
   b.style.display='block';
@@ -705,8 +704,8 @@ function hideRhythmGrid(h){ document.getElementById('rgrid').style.display=h?'no
 
 function firePreAlert(){
   sndPreAlert();
-  speak('Préparer la précharge. Analyse dans quinze secondes.');
-  showBanner('pre','⏱ Préparer la précharge — Analyse dans 15 s');
+  speak('Précharger à '+S.energyLevels[S.energyIdx]+' joules.');
+  showBanner('pre','⏱ Précharger à '+S.energyLevels[S.energyIdx]+' joules — Analyse dans 15 s');
   hideRhythmGrid(false);
   setTimeout(()=>hideBanner(),13500);
 }
@@ -788,13 +787,14 @@ function updateMedsInline(){
     // Amio 150 — only appears after amio 300 given, until 5th shock
     if(S.amio300Given && !S.amio150Given){
       document.getElementById('blk-amio150').style.display='block';
-      if(S.shockCount>=5){
+      if(S.shockCount >= S.amio300GivenAtShock + 2){
         document.getElementById('amio150-btn').disabled=false;
         document.getElementById('amio150-status').textContent=S.shockCount===5?'Indiquée (5ème choc)':'Disponible';
         document.getElementById('amio150-force').style.display='none';
       } else {
         document.getElementById('amio150-btn').disabled=true;
-        document.getElementById('amio150-status').textContent='Après le 5ème choc ('+S.shockCount+'/5)';
+        const needed = S.amio300GivenAtShock + 2;
+        document.getElementById('amio150-status').textContent=`Après le ${needed}ème choc (${S.shockCount}/${needed})`;
         document.getElementById('amio150-force').style.display='block';
       }
     } else if(S.amio150Given){
@@ -805,12 +805,11 @@ function updateMedsInline(){
 
 function giveDrug(drug, force){
   if(drug==='adr'){
-    if(S.adrActive && !force) return;
+    if(S.adrOverdue===false && S.adrActive && !force) return;
     if(force && S.adrActive){ clearInterval(S.adrInterval); }
     S.adrActive=true; S.adrStart=Date.now();
     S.adrOverdue=false;
     logEvent('Adrénaline 1 mg IV/IO','drug');
-    speak('Adrénaline administrée.');
     document.getElementById('adr-btn').disabled=true;
     document.getElementById('adr-force').style.display='none';
     document.getElementById('adr-status').textContent='Administrée';
@@ -819,14 +818,13 @@ function giveDrug(drug, force){
   } else if(drug==='amio300'){
     if(S.amio300Given) return;
     S.amio300Given=true;
+    S.amio300GivenAtShock=S.shockCount;
     logEvent('Amiodarone 300 mg IV','drug');
-    speak('Amiodarone trois cents milligrammes administrée.');
     updateMedsInline();
   } else if(drug==='amio150'){
     if(S.amio150Given) return;
     S.amio150Given=true;
     logEvent('Amiodarone 150 mg IV','drug');
-    speak('Amiodarone cent cinquante milligrammes administrée.');
     updateMedsInline();
   }
 }
@@ -839,23 +837,24 @@ function updateAdr(){
 
   if(rem>0){
     cd.textContent=fmt(rem);
-    cd.className='mcd'+(rem<30?' overdue':'');
+    cd.className='mcd';
     cd.style.color=rem<30?'var(--red2)':'var(--orange2)';
+    statusEl.textContent='Administrée — prochain délai :';
     S.adrOverdue=false;
   } else {
+    // Overdue — keep interval running to show accumulating delay
     if(!S.adrOverdue){
       S.adrOverdue=true;
       sndReady();
-      speak('Adrénaline prête à administrer.');
+      speak('Administrer adrénaline.');
+      document.getElementById('adr-btn').disabled=false;
+      statusEl.textContent='⚠ En retard !';
     }
-    const overdue=el-S.ADR_S;
+    const overdue=Math.abs(rem); // rem is negative, so overdue = |rem|
     cd.textContent=fmtOverdue(overdue);
     cd.className='mcd overdue';
     cd.style.color='var(--red2)';
-    statusEl.textContent='En retard!';
-    document.getElementById('adr-btn').disabled=false;
-    S.adrActive=false;
-    clearInterval(S.adrInterval);
+    // DON'T set adrActive=false or clearInterval here — keep ticking
   }
 }
 
@@ -933,8 +932,23 @@ function closeStop(){document.getElementById('stop-ov').classList.remove('show')
 function copyLogs(){
   const t=document.getElementById('logs-export').textContent;
   navigator.clipboard.writeText(t).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);});
-  document.getElementById('copy-btn').textContent='✅ Copié';
+  <div class="so-btns">
+    <button id="copy-btn" onclick="copyLogs()">📋 Copier</button>
+    <button id="dl-btn" onclick="downloadLogs()" style="background:var(--green);color:#fff;">⬇ Télécharger</button>
+    <button id="close-so" onclick="closeStop()">Continuer</button>
+  </div>
   setTimeout(()=>document.getElementById('copy-btn').textContent='📋 Copier',2000);
+}
+function downloadLogs(){
+  const text=document.getElementById('logs-export').textContent;
+  const now=new Date();
+  const stamp=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  const blob=new Blob([text],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`RCP_${stamp}.txt`;
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -968,12 +982,14 @@ function toggleTheme(){
   document.documentElement.setAttribute('data-theme',S.lightTheme?'light':'');
   document.getElementById('sw-theme').classList.toggle('on',S.lightTheme);
   document.getElementById('theme-desc').textContent=S.lightTheme?'Clair':'Sombre';
+  savePrefs();
 }
 function toggleDefault302(){
   S.default302=!S.default302;
   document.getElementById('sw-302-def').classList.toggle('on',S.default302);
   S.vent302=S.default302;
   document.getElementById('sw-302').classList.toggle('on',S.vent302);
+  savePrefs();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1042,10 +1058,49 @@ if(window.matchMedia){
   });
 }
 
+
+// ══════════════════════════════════════════════════════════
+// Persistence
+// ══════════════════════════════════════════════════════════
+function savePrefs(){
+  localStorage.setItem('cpr-prefs', JSON.stringify({
+    vent302: S.default302,
+    speechOn: S.speechOn,
+    lightTheme: S.lightTheme,
+    themeManual: S._themeManual,
+  }));
+}
+function loadPrefs(){
+  try{
+    const p=JSON.parse(localStorage.getItem('cpr-prefs')||'{}');
+    if(p.vent302){ S.default302=true; S.vent302=true; }
+    if(p.speechOn){ S.speechOn=true; }
+    if(p.themeManual && p.lightTheme!==undefined){
+      S.lightTheme=p.lightTheme; S._themeManual=true;
+    }
+  }catch(_){}
+}
+
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
 function init(){
+  loadPrefs();
+  // Appliquer les prefs au DOM
+  if(S.lightTheme && S._themeManual){
+    document.documentElement.setAttribute('data-theme','light');
+    document.getElementById('sw-theme').classList.add('on');
+    document.getElementById('theme-desc').textContent='Clair';
+  }
+  if(S.speechOn){
+    document.getElementById('speech-btn').classList.add('speech-on');
+    document.getElementById('sw-speech').classList.add('on');
+    document.getElementById('speech-desc').textContent='Activée';
+  }
+  if(S.vent302){
+    document.getElementById('sw-302').classList.add('on');
+    document.getElementById('sw-302-def').classList.add('on');
+  }
   initDots();
   startMetro();
   requestWakeLock();

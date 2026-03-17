@@ -739,7 +739,7 @@ function recordShock(){
   if(S.energyIdx<S.energyLevels.length-1) S.energyIdx++;
   document.getElementById('energy-val').textContent=S.energyLevels[S.energyIdx];
 
-  logEvent('Choc n°'+S.shockCount+' — '+energy+' J','shock');
+  logEvent('Rythme: '+S.currentRhythm+' — Choc n°'+S.shockCount+' — '+energy+' J','shock');
   sndShock();
 
   const b=document.getElementById('shock-badge');

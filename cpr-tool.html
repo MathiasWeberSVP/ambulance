@@ -340,7 +340,7 @@ input[type=range].lido-slider {
 
       <!-- Adrénaline -->
       <div class="mcard adr" id="blk-adr" style="display:none">
-        <div class="mname" style="color:var(--orange2)">Adrénaline</div>
+        <div class="mname" style="color:var(--orange2)">ADREnaline</div>
         <div class="mdose" id="adr-dose-lbl">1 mg IV/IO — toutes les 3–5 min</div>
         <div class="mrow">
           <div class="mstatus" id="adr-status">Prête</div>
@@ -352,7 +352,7 @@ input[type=range].lido-slider {
 
       <!-- Amiodarone 300 -->
       <div class="mcard amio" id="blk-amio300" style="display:none">
-        <div class="mname" style="color:var(--blue2)">Amiodarone</div>
+        <div class="mname" style="color:var(--blue2)">AMIOdarone</div>
         <div class="mdose">300 mg IV — après le 3ème choc</div>
         <div class="mrow">
           <div class="mstatus" id="amio300-status">En attente du 3ème choc</div>
@@ -363,7 +363,7 @@ input[type=range].lido-slider {
 
       <!-- Amiodarone 150 -->
       <div class="mcard amio" id="blk-amio150" style="display:none">
-        <div class="mname" style="color:var(--blue2)">Amiodarone — 2ème dose</div>
+        <div class="mname" style="color:var(--blue2)">AMIOdarone — 2ème dose</div>
         <div class="mdose">150 mg IV — après le 5ème choc</div>
         <div class="mrow">
           <div class="mstatus" id="amio150-status">En attente du 5ème choc</div>
@@ -452,7 +452,7 @@ input[type=range].lido-slider {
 
       <div class="mdrug-row">
         <div class="mdrug-info">
-          <div class="mdrug-name" style="color:var(--orange2)">Adrénaline</div>
+          <div class="mdrug-name" style="color:var(--orange2)">ADREnaline</div>
           <div class="mdrug-sub">mg IV/IO</div>
         </div>
         <div class="dose-ctrl">
@@ -465,7 +465,7 @@ input[type=range].lido-slider {
 
       <div class="mdrug-row">
         <div class="mdrug-info">
-          <div class="mdrug-name" style="color:var(--blue2)">Amiodarone</div>
+          <div class="mdrug-name" style="color:var(--blue2)">AMIOdarone</div>
           <div class="mdrug-sub">mg IV</div>
         </div>
         <div class="dose-ctrl">
@@ -528,16 +528,21 @@ input[type=range].lido-slider {
         </div>
       </div>
 
-      <div class="card">
-        <div class="ctitle">Fluides</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:12px;color:var(--text2)">Total administré</div>
+      <div class="mdrug-row" style="flex-direction:column;align-items:stretch;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="mdrug-name" style="color:var(--blue2)">Fluides</div>
           <div id="fluid-total-badge2"
-            style="font-size:13px;font-weight:700;color:var(--blue2)">0 ml</div>
+            style="font-size:11px;font-weight:700;color:var(--blue2);background:var(--blue-bg);
+                  border:1px solid var(--blue);border-radius:12px;padding:2px 10px">
+            0 ml total
+          </div>
         </div>
-        <div id="fluid-type-row2" style="display:flex;gap:8px;margin-bottom:10px"></div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px"
+
+        <div id="fluid-type-row2" style="display:flex;gap:8px"></div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"
           id="fluid-vol-btns2"></div>
+
         <div style="display:flex;gap:8px">
           <button id="fluid-start-btn2"
             style="flex:1;padding:10px;background:var(--blue);border:none;border-radius:var(--r);
@@ -548,9 +553,9 @@ input[type=range].lido-slider {
                   border-radius:var(--r);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer"
             onclick="stopFluid()" disabled>⏹ Terminer</button>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-top:10px;padding:8px;
-                    background:var(--bg3);border-radius:var(--r);line-height:1.6">
-          <b style="color:var(--text2)">ERC 2025</b><br>
+
+        <div style="font-size:11px;color:var(--text3);line-height:1.6">
+          <b style="color:var(--text2)">ERC 2025</b> —
           Give fluids during CPR only if cardiac arrest is caused by hypovolaemia.
         </div>
       </div>
@@ -689,7 +694,7 @@ input[type=range].lido-slider {
         <div style="display:flex;gap:8px;margin-bottom:12px">
           <button id="btn-amio" onclick="setAntiarrhythmic('amiodarone')"
             style="flex:1;padding:10px;border-radius:var(--r);border:2px solid var(--blue);background:var(--blue-bg);color:var(--blue2);font-size:13px;font-weight:700;cursor:pointer">
-            Amiodarone
+            AMIOdarone
           </button>
           <button id="btn-lido" onclick="setAntiarrhythmic('lidocaine')"
             style="flex:1;padding:10px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer">

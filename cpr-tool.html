@@ -537,54 +537,51 @@ input[type=range].lido-slider {
         <button class="give-btn blue" onclick="manualDrug('Amiodarone', 'amio-m-val', 'mg IV')">Donner</button>
       </div>
 
-<div class="mdrug-row" id="lido-manual-block" style="display:none;flex-wrap:wrap;row-gap:8px">
+      <div class="mdrug-row" id="lido-manual-block" style="display:none;flex-wrap:wrap;row-gap:8px">
 
-  <div class="mdrug-info">
-    <div class="mdrug-name" style="color:var(--green2)">Lidocaïne</div>
-    <div class="mdrug-sub" id="lido-manual-sub">1ère dose · 1–1.5 mg/kg</div>
-  </div>
+        <div class="mdrug-info">
+          <div class="mdrug-name" style="color:var(--green2)">Lidocaïne</div>
+          <div class="mdrug-sub" id="lido-manual-sub">1ère dose · 1–1.5 mg/kg</div>
+        </div>
 
-  <div style="display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end">
-    <div id="lido-erc-ctrl" style="display:none">
-      <div class="dose-ctrl">
-        <button class="ebtn" onclick="adjLidoERC(-50)">−</button>
-        <input id="lido-erc-dose" type="number" min="50" max="500" step="50" value="100" class="dose-inp">
-        <span style="font-size:11px;color:var(--text3)">mg</span>
-        <button class="ebtn" onclick="adjLidoERC(50)">+</button>
+        <div style="display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end">
+          <div id="lido-erc-ctrl" style="display:none">
+            <div class="dose-ctrl">
+              <button class="ebtn" onclick="adjLidoERC(-50)">−</button>
+              <input id="lido-erc-dose" type="number" min="50" max="500" step="50" value="100" class="dose-inp">
+              <span style="font-size:11px;color:var(--text3)">mg</span>
+              <button class="ebtn" onclick="adjLidoERC(50)">+</button>
+            </div>
+          </div>
+          <div id="lido-aha-manual-ctrl" style="display:none">
+            <div class="dose-ctrl">
+              <input id="lido-m-dose-input" type="number" min="10" max="500" step="5" value="94"
+                class="dose-inp" style="color:var(--green2);width:64px">
+              <span style="font-size:11px;color:var(--text3)">mg</span>
+            </div>
+          </div>
+          <button class="give-btn" style="background:var(--green)" onclick="giveLidoManual()">Donner</button>
+        </div>
+
+        <!-- Curseurs AHA — ligne 2, pleine largeur -->
+        <div id="lido-aha-sliders" style="display:none;width:100%">
+          <div class="lido-ctrl-row">
+            <span class="lido-ctrl-label">Poids</span>
+            <input type="range" id="lido-m-weight" min="50" max="150" step="5" value="75"
+              oninput="onLidoManualSlider()" style="flex:1">
+            <span id="lido-m-weight-disp"
+              style="font-size:12px;font-weight:700;min-width:44px;text-align:right">75 kg</span>
+          </div>
+          <div class="lido-ctrl-row">
+            <span class="lido-ctrl-label">Ratio</span>
+            <input type="range" id="lido-m-ratio" min="100" max="150" step="5" value="125"
+              oninput="onLidoManualSlider()" style="flex:1">
+            <span id="lido-m-ratio-disp"
+              style="font-size:12px;font-weight:700;min-width:44px;text-align:right">1.25 mg/kg</span>
+          </div>
+        </div>
+
       </div>
-    </div>
-    <div id="lido-aha-manual-ctrl" style="display:none">
-      <div class="dose-ctrl">
-        <button class="ebtn" onclick="adjLidoAHADose(-5)">−</button>
-        <input id="lido-m-dose-input" type="number" min="10" max="500" step="5" value="94"
-          class="dose-inp" style="color:var(--green2)">
-        <span style="font-size:11px;color:var(--text3)">mg</span>
-        <button class="ebtn" onclick="adjLidoAHADose(5)">+</button>
-      </div>
-    </div>
-    <button class="give-btn" style="background:var(--green)"
-      onclick="giveLidoManual()">Donner</button>
-  </div>
-
-  <!-- Curseurs AHA — ligne 2, pleine largeur -->
-  <div id="lido-aha-sliders" style="display:none;width:100%">
-    <div class="lido-ctrl-row">
-      <span class="lido-ctrl-label">Poids</span>
-      <input type="range" id="lido-m-weight" min="50" max="150" step="5" value="75"
-        oninput="onLidoManualSlider()" style="flex:1">
-      <span id="lido-m-weight-disp"
-        style="font-size:12px;font-weight:700;min-width:44px;text-align:right">75 kg</span>
-    </div>
-    <div class="lido-ctrl-row">
-      <span class="lido-ctrl-label">Ratio</span>
-      <input type="range" id="lido-m-ratio" min="100" max="150" step="5" value="125"
-        oninput="onLidoManualSlider()" style="flex:1">
-      <span id="lido-m-ratio-disp"
-        style="font-size:12px;font-weight:700;min-width:44px;text-align:right">1.25 mg/kg</span>
-    </div>
-  </div>
-
-</div>
 
       <div class="mdrug-row" style="flex-direction:column;align-items:stretch;gap:10px">
         <div style="display:flex;align-items:center;justify-content:space-between">
@@ -1282,6 +1279,7 @@ function updateLidoManualUI(){
   document.getElementById('lido-erc-ctrl').style.display=isERC?'flex':'none';
   document.getElementById('lido-aha-manual-ctrl').style.display=isERC?'none':'flex';
   document.getElementById('lido-aha-sliders').style.display=isERC?'none':'block';
+  document.getElementById('lido-manual-sub').style.display=isERC?'none':'block';
   updateLidoManualRatioRange();
 }
 

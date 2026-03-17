@@ -482,35 +482,35 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div class="ctitle">Énergie de défibrillation</div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-        <div style="text-align:center">
+        <div>
           <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Choc 1</div>
           <div style="display:flex;align-items:center;gap:4px">
             <button class="ebtn" onclick="adjEnergyInput('e1',-10)">−</button>
             <input id="e1" type="number" min="50" max="360" step="10" value="120"
               style="width:52px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 2px;color:var(--yellow2);font-size:15px;font-weight:700">
+            <span style="font-size:11px;color:var(--text3)">J</span>
             <button class="ebtn" onclick="adjEnergyInput('e1',10)">+</button>
           </div>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">J</div>
         </div>
-        <div style="text-align:center">
+        <div>
           <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Choc 2</div>
           <div style="display:flex;align-items:center;gap:4px">
             <button class="ebtn" onclick="adjEnergyInput('e2',-10)">−</button>
             <input id="e2" type="number" min="50" max="360" step="10" value="150"
               style="width:52px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 2px;color:var(--yellow2);font-size:15px;font-weight:700">
+            <span style="font-size:11px;color:var(--text3)">J</span>
             <button class="ebtn" onclick="adjEnergyInput('e2',10)">+</button>
           </div>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">J</div>
         </div>
-        <div style="text-align:center">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Choc 3+</div>
+        <div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Choc 3 et suivants</div>
           <div style="display:flex;align-items:center;gap:4px">
             <button class="ebtn" onclick="adjEnergyInput('e3',-10)">−</button>
             <input id="e3" type="number" min="50" max="360" step="10" value="200"
               style="width:52px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 2px;color:var(--yellow2);font-size:15px;font-weight:700">
+            <span style="font-size:11px;color:var(--text3)">J</span>
             <button class="ebtn" onclick="adjEnergyInput('e3',10)">+</button>
           </div>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">J</div>
         </div>
       </div>
 
@@ -1038,15 +1038,26 @@ function setGuidelines(g){
 
   // Recalcule l'affichage des meds si une réanimation est en cours
   updateMedsInline();
+
+  //Refresh guideline text
+  updateEnergyGuidelineText();
 }
 
 function updateEnergyGuidelineText(){
   const el=document.getElementById('energy-guideline-text');
   if(!el) return;
   if(S.guidelines==='ERC'){
-    el.innerHTML='<b>ERC :</b> 1er choc ≥150 J (biphasique). Si le 1er choc échoue, augmenter l\'énergie si possible. En cas de doute sur les réglages, utiliser l\'énergie maximale pour tous les chocs.';
+    el.innerHTML=`<b style="color:var(--text2)">ERC 2021</b><br><br>
+<b>Energy levels:</b><br>
+- For biphasic waveforms (rectilinear biphasic or truncated exponential biphasic, but not pulsed biphasic), defibrillation shock energy levels for the first shock is at least 150 J.<br>
+- For pulsed biphasic waveforms, deliver the first shock at 130–150 J.<br><br>
+- If the first shock is not successful and the defibrillator is capable of delivering shocks of higher energy, it is reasonable to increase the energy for subsequent shocks.<br><br>
+- If the rescuer is unaware of the recommended energy settings of the defibrillator, for an adult use the highest energy setting for all shocks.`;
   } else {
-    el.innerHTML='<b>AHA :</b> Utiliser l\'énergie recommandée par le fabricant. En cas de doute, l\'énergie maximale peut être envisagée. Une énergie croissante pour les chocs suivants peut être considérée si le 1er choc échoue.';
+    el.innerHTML=`<b style="color:var(--text2)">AHA 2020</b><br><br>
+- It is reasonable that selection of fixed versus escalating energy levels for subsequent shocks for adults in cardiac arrest with presumed shock-refractory arrhythmias be based on the specific manufacturer's instructions for that waveform.<br><br>
+- If using a defibrillator capable of escalating energies, higher energy for second and subsequent shocks may be considered if the initial shock fails to restore a perfusing rhythm in adult patients with cardiac arrest.<br><br>
+- In the absence of conclusive evidence that one biphasic waveform is superior to another in termination of ventricular fibrillation, it may be reasonable to use the manufacturer's recommended energy dose for the first shock in adult patients with cardiac arrest. If this is not known, defibrillation at the maximal dose may be considered.`;
   }
 }
 

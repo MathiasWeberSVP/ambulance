@@ -479,6 +479,49 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       </div>
     </div>
     <div class="card">
+      <div class="ctitle">Énergie de défibrillation</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Choc 1</div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <button class="ebtn" onclick="adjEnergyInput('e1',-10)">−</button>
+            <input id="e1" type="number" min="50" max="360" step="10" value="120"
+              style="width:52px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 2px;color:var(--yellow2);font-size:15px;font-weight:700">
+            <button class="ebtn" onclick="adjEnergyInput('e1',10)">+</button>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">J</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Choc 2</div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <button class="ebtn" onclick="adjEnergyInput('e2',-10)">−</button>
+            <input id="e2" type="number" min="50" max="360" step="10" value="150"
+              style="width:52px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 2px;color:var(--yellow2);font-size:15px;font-weight:700">
+            <button class="ebtn" onclick="adjEnergyInput('e2',10)">+</button>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">J</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Choc 3+</div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <button class="ebtn" onclick="adjEnergyInput('e3',-10)">−</button>
+            <input id="e3" type="number" min="50" max="360" step="10" value="200"
+              style="width:52px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 2px;color:var(--yellow2);font-size:15px;font-weight:700">
+            <button class="ebtn" onclick="adjEnergyInput('e3',10)">+</button>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">J</div>
+        </div>
+      </div>
+
+      <button id="save-energy-btn" onclick="saveEnergySettings()"
+        style="width:100%;padding:10px;background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:var(--r);color:var(--yellow2);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px">
+        Enregistrer
+      </button>
+
+      <div style="font-size:11px;color:var(--text3);line-height:1.6;padding:8px;background:var(--bg3);border-radius:var(--r)" id="energy-guideline-text"></div>
+    </div>
+    <div class="card">
       <div class="ctitle">Paramètres</div>
       <div class="prow"><div><div class="pname">Thème</div><div class="pdesc" id="theme-desc">Sombre (suit le système)</div></div><div class="tsw" id="sw-theme" onclick="toggleTheme()"></div></div>
       <div class="prow"><div><div class="pname">Synthèse vocale</div><div class="pdesc" id="speech-desc">Désactivée</div></div><div class="tsw" id="sw-speech" onclick="toggleSpeech()"></div></div>
@@ -551,7 +594,7 @@ const S={
 
   currentRhythm:null, isShockable:false,
   shockCount:0,
-  energyLevels:[120,150,200], energyIdx:0,
+  energyLevels:[120,150,200], energyIdx:0, energyCustom:[120,150,200],
 
   cycleActive:false, cycleStart:0, CYCLE_S:120,
   cycleInterval:null, preAlertFired:false,
@@ -736,7 +779,10 @@ function selectRhythm(btn){
 function recordShock(){
   S.shockCount++;
   const energy=S.energyLevels[S.energyIdx];
-  if(S.energyIdx<S.energyLevels.length-1) S.energyIdx++;
+  const maxIdx=S.energyLevels.length-1;
+  // Après le 1er choc → idx 1, après le 2ème → idx 2, rester sur idx 2 ensuite
+  if(S.energyIdx<maxIdx) S.energyIdx++;
+  // Si on a plus de 3 chocs, rester sur le dernier palier (choc 3+)
   document.getElementById('energy-val').textContent=S.energyLevels[S.energyIdx];
 
   logEvent('Rythme: '+S.currentRhythm+' — Choc n°'+S.shockCount+' — '+energy+' J','shock');
@@ -994,6 +1040,40 @@ function setGuidelines(g){
   updateMedsInline();
 }
 
+function updateEnergyGuidelineText(){
+  const el=document.getElementById('energy-guideline-text');
+  if(!el) return;
+  if(S.guidelines==='ERC'){
+    el.innerHTML='<b>ERC :</b> 1er choc ≥150 J (biphasique). Si le 1er choc échoue, augmenter l\'énergie si possible. En cas de doute sur les réglages, utiliser l\'énergie maximale pour tous les chocs.';
+  } else {
+    el.innerHTML='<b>AHA :</b> Utiliser l\'énergie recommandée par le fabricant. En cas de doute, l\'énergie maximale peut être envisagée. Une énergie croissante pour les chocs suivants peut être considérée si le 1er choc échoue.';
+  }
+}
+
+function saveEnergySettings(){
+  const vals=[
+    parseInt(document.getElementById('e1').value),
+    parseInt(document.getElementById('e2').value),
+    parseInt(document.getElementById('e3').value),
+  ];
+  // Validation
+  for(const v of vals){
+    if(isNaN(v)||v<50||v>360){
+      alert('Valeurs acceptées : 50–360 J'); return;
+    }
+  }
+  S.energyCustom=[...vals];
+  S.energyLevels=[...vals];
+  S.energyIdx=0;
+  document.getElementById('energy-val').textContent=S.energyLevels[S.energyIdx];
+  document.getElementById('shock-badge').textContent='';
+  savePrefs();
+  // Feedback
+  const btn=document.getElementById('save-energy-btn');
+  btn.textContent='✓ Enregistré';
+  setTimeout(()=>btn.textContent='Enregistrer',1500);
+}
+
 // ══════════════════════════════════════════════════════════
 // MANUAL DRUGS TAB
 // ══════════════════════════════════════════════════════════
@@ -1015,6 +1095,14 @@ function manualOther(){
   logEvent((name+(dose?' '+dose:'')),'drug');
   document.getElementById('other-drug-name').value='';
   document.getElementById('other-drug-dose').value='';
+}
+
+// ══════════════════════════════════════════════════════════
+// MANUAL ENERGY TAB
+// ══════════════════════════════════════════════════════════
+function adjEnergyInput(id, delta){
+  const el=document.getElementById(id);
+  el.value=Math.max(50,Math.min(360,parseInt(el.value||100)+delta));
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1199,6 +1287,7 @@ function savePrefs(){
     lightTheme: S.lightTheme,
     themeManual: S._themeManual,
     guidelines: S.guidelines,
+    energyCustom: S.energyCustom,
   }));
 }
 function loadPrefs(){
@@ -1210,6 +1299,10 @@ function loadPrefs(){
       S.lightTheme=p.lightTheme; S._themeManual=true;
     }
     if(p.guidelines) S.guidelines=p.guidelines;
+    if(p.energyCustom && Array.isArray(p.energyCustom) && p.energyCustom.length===3){
+      S.energyCustom=p.energyCustom;
+      S.energyLevels=[...p.energyCustom];
+    }
   }catch(_){}
 }
 
@@ -1219,6 +1312,12 @@ function loadPrefs(){
 function init(){
   loadPrefs();
   setGuidelines(S.guidelines);
+  // Appliquer l'énergie sauvegardée aux inputs
+  ['e1','e2','e3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el) el.value=S.energyCustom[i];
+  });
+  updateEnergyGuidelineText();
   // Appliquer les prefs au DOM
   if(S.lightTheme && S._themeManual){
     document.documentElement.setAttribute('data-theme','light');

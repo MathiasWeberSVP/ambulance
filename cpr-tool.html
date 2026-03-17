@@ -142,6 +142,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .dose-inp{width:52px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 4px;color:var(--text);font-size:14px;font-weight:700;}
 .give-btn{padding:7px 14px;border-radius:var(--r);border:none;font-size:13px;font-weight:700;cursor:pointer;background:var(--orange);color:#fff;white-space:nowrap;}
 .give-btn.blue{background:var(--blue);}
+.mdrug-info-fixed{font-size:14px;} /* pas de flex:1 */
 
 /* LOGS */
 .lbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px;}
@@ -513,11 +514,11 @@ input[type=range].lido-slider {
       <div class="mdrug-row">
         <div class="mdrug-info">
           <div class="mdrug-name" style="color:var(--orange2)">ADREnaline</div>
-          <div class="mdrug-sub">mg IV/IO</div>
         </div>
         <div class="dose-ctrl">
           <button class="ebtn" onclick="adjDose('adr-m',-0.5)">−</button>
           <input class="dose-inp" id="adr-m-val" type="number" value="1" min="0.5" max="5" step="0.5">
+          <span style="font-size:11px;color:var(--text3)">mg</span>
           <button class="ebtn" onclick="adjDose('adr-m',0.5)">+</button>
         </div>
         <button class="give-btn" onclick="manualDrug('Adrénaline', 'adr-m-val', 'mg IV/IO')">Donner</button>
@@ -526,67 +527,64 @@ input[type=range].lido-slider {
       <div class="mdrug-row">
         <div class="mdrug-info">
           <div class="mdrug-name" style="color:var(--blue2)">AMIOdarone</div>
-          <div class="mdrug-sub">mg IV</div>
         </div>
         <div class="dose-ctrl">
           <button class="ebtn" onclick="adjDose('amio-m',-50)">−</button>
           <input class="dose-inp" id="amio-m-val" type="number" value="300" min="50" max="600" step="50">
+          <span style="font-size:11px;color:var(--text3)">mg</span>
           <button class="ebtn" onclick="adjDose('amio-m',50)">+</button>
         </div>
         <button class="give-btn blue" onclick="manualDrug('Amiodarone', 'amio-m-val', 'mg IV')">Donner</button>
       </div>
 
-      <!-- Séparateur -->
-      <div class="mdrug-row" id="lido-manual-block" style="display:none">
-        <div style="width:100%">
-          <div class="mdrug-name" style="color:var(--green2)">Lidocaïne</div>
-          <div class="mdrug-sub" id="lido-manual-sub">mg IV</div>
+<div class="mdrug-row" id="lido-manual-block" style="display:none;flex-wrap:wrap;row-gap:8px">
 
-          <!-- ERC : boutons fixes -->
-          <div id="lido-erc-ctrl" style="display:none;margin-top:8px">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              <button class="ebtn" onclick="adjLidoERC(-50)">−</button>
-              <input id="lido-erc-dose" type="number" min="50" max="500" step="50" value="100"
-                style="width:64px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 4px;color:var(--green2);font-size:15px;font-weight:700">
-              <span style="font-size:12px;color:var(--text3)">mg IV</span>
-              <button class="ebtn" onclick="adjLidoERC(50)">+</button>
-            </div>
-            <div style="font-size:10px;color:var(--text3);margin-bottom:8px">
-              1ère dose : 100 mg · 2ème dose : 50 mg
-            </div>
-            <button class="give-btn" style="width:100%;background:var(--green)"
-              onclick="manualLidoERC()">Administrer</button>
-          </div>
+  <div class="mdrug-info">
+    <div class="mdrug-name" style="color:var(--green2)">Lidocaïne</div>
+    <div class="mdrug-sub" id="lido-manual-sub">1ère dose · 1–1.5 mg/kg</div>
+  </div>
 
-          <!-- AHA : curseurs + dose libre -->
-          <div id="lido-aha-manual-ctrl" style="display:none;margin-top:8px">
-            <div class="lido-ctrl-row">
-              <span class="lido-ctrl-label">Poids</span>
-              <input type="range" id="lido-m-weight" min="50" max="150" step="5" value="75"
-                oninput="onLidoManualSlider()"
-                style="flex:1">
-              <span id="lido-m-weight-disp"
-                style="font-size:13px;font-weight:700;min-width:44px;text-align:right">75 kg</span>
-            </div>
-            <div class="lido-ctrl-row">
-              <span class="lido-ctrl-label">Dose</span>
-              <input type="range" id="lido-m-ratio" min="50" max="150" step="5" value="125"
-                oninput="onLidoManualSlider()"
-                style="flex:1">
-              <span id="lido-m-ratio-disp"
-                style="font-size:13px;font-weight:700;min-width:44px;text-align:right">1.25 mg/kg</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-              <span style="font-size:11px;color:var(--text3);min-width:48px">Dose finale</span>
-              <input id="lido-m-dose-input" type="number" min="10" max="500" step="5" value="94"
-                style="width:64px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 4px;color:var(--green2);font-size:15px;font-weight:700">
-              <span style="font-size:11px;color:var(--text3)">mg — modifiable</span>
-            </div>
-            <button class="give-btn" style="width:100%;background:var(--green)"
-              onclick="manualLidoAHA()">Administrer</button>
-          </div>
-        </div>
+  <div style="display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end">
+    <div id="lido-erc-ctrl" style="display:none">
+      <div class="dose-ctrl">
+        <button class="ebtn" onclick="adjLidoERC(-50)">−</button>
+        <input id="lido-erc-dose" type="number" min="50" max="500" step="50" value="100" class="dose-inp">
+        <span style="font-size:11px;color:var(--text3)">mg</span>
+        <button class="ebtn" onclick="adjLidoERC(50)">+</button>
       </div>
+    </div>
+    <div id="lido-aha-manual-ctrl" style="display:none">
+      <div class="dose-ctrl">
+        <button class="ebtn" onclick="adjLidoAHADose(-5)">−</button>
+        <input id="lido-m-dose-input" type="number" min="10" max="500" step="5" value="94"
+          class="dose-inp" style="color:var(--green2)">
+        <span style="font-size:11px;color:var(--text3)">mg</span>
+        <button class="ebtn" onclick="adjLidoAHADose(5)">+</button>
+      </div>
+    </div>
+    <button class="give-btn" style="background:var(--green)"
+      onclick="giveLidoManual()">Donner</button>
+  </div>
+
+  <!-- Curseurs AHA — ligne 2, pleine largeur -->
+  <div id="lido-aha-sliders" style="display:none;width:100%">
+    <div class="lido-ctrl-row">
+      <span class="lido-ctrl-label">Poids</span>
+      <input type="range" id="lido-m-weight" min="50" max="150" step="5" value="75"
+        oninput="onLidoManualSlider()" style="flex:1">
+      <span id="lido-m-weight-disp"
+        style="font-size:12px;font-weight:700;min-width:44px;text-align:right">75 kg</span>
+    </div>
+    <div class="lido-ctrl-row">
+      <span class="lido-ctrl-label">Ratio</span>
+      <input type="range" id="lido-m-ratio" min="100" max="150" step="5" value="125"
+        oninput="onLidoManualSlider()" style="flex:1">
+      <span id="lido-m-ratio-disp"
+        style="font-size:12px;font-weight:700;min-width:44px;text-align:right">1.25 mg/kg</span>
+    </div>
+  </div>
+
+</div>
 
       <div class="mdrug-row" style="flex-direction:column;align-items:stretch;gap:10px">
         <div style="display:flex;align-items:center;justify-content:space-between">
@@ -1238,10 +1236,17 @@ function onLidoManualSlider(){
   S.patientWeight=w;
 }
 
+function giveLidoManual(){
+  const isERC=S.guidelines==='ERC';
+  if(isERC) manualLidoERC();
+  else manualLidoAHA();
+}
+
 function updateLidoManualRatioRange(){
   // Passe le curseur ratio en plage 2ème dose si lido1 déjà donnée
   const slider=document.getElementById('lido-m-ratio');
-  if(!slider) return;
+  const subEl=document.getElementById('lido-manual-sub');
+  if(!slider || !subEl) return;  if(!slider) return;
   if(S.lido1Given){
     slider.min=50; slider.max=75; slider.step=5;
     if(parseInt(slider.value)>75) slider.value=63;
@@ -1267,15 +1272,16 @@ function manualLidoAHA(){
   updateLidoManualRatioRange();
   updateMedsInline();
   const btn=event.target; btn.textContent='✓';
-  setTimeout(()=>btn.textContent='Administrer',1200);
+  setTimeout(()=>btn.textContent='Donner',1200);
 }
 
 // Affichage/masquage des contrôles lido selon guidelines
 function updateLidoManualUI(){
   document.getElementById('lido-manual-block').style.display='block';
   const isERC=S.guidelines==='ERC';
-  document.getElementById('lido-erc-ctrl').style.display=isERC?'block':'none';
-  document.getElementById('lido-aha-manual-ctrl').style.display=isERC?'none':'block';
+  document.getElementById('lido-erc-ctrl').style.display=isERC?'flex':'none';
+  document.getElementById('lido-aha-manual-ctrl').style.display=isERC?'none':'flex';
+  document.getElementById('lido-aha-sliders').style.display=isERC?'none':'block';
   updateLidoManualRatioRange();
 }
 
@@ -1763,6 +1769,7 @@ function setGuidelines(g){
   updateEnergyGuidelineText();
   updateAntiarrGuidelineText();
   buildCausesList();
+  updateLidoManualUI();
 
   if(S.roscActive) buildRoscChecklist();
 }
@@ -1848,7 +1855,7 @@ function manualLidoERC(){
   updateLidoManualUI();
   updateMedsInline();
   const btn=event.target; btn.textContent='✓';
-  setTimeout(()=>btn.textContent='Administrer',1200);
+  setTimeout(()=>btn.textContent='Donner',1200);
 }
 // ── FLUIDES ──────────────────────────────────────────
 function toggleFluidType(type){

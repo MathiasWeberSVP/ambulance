@@ -920,12 +920,22 @@ const S={
   fluidStart: 0,
   fluidTotal: 0,             // ml total administré
 
+  //ROSC
   roscActive: false,
+
+  //Retour sur page séquence
+  lastInteraction: Date.now(),
+  autoReturnActive: false,
 
   wakeLock:null,
   logs:[],
   pwaPrompt:null,
 };
+
+// Tracker toute interaction utilisateur
+['touchstart','click','keydown'].forEach(ev=>
+  document.addEventListener(ev,()=>S.lastInteraction=Date.now(),{passive:true})
+);
 
 // ══════════════════════════════════════════════════════════
 // AUDIO — AudioContext clock metronome
@@ -1297,6 +1307,10 @@ function startCycle(){
   if(S.cycleInterval) clearInterval(S.cycleInterval);
   S.cycleInterval=setInterval(updateCycle,500);
   updateCycle();
+  if(!S.autoReturnActive){
+    S.autoReturnActive=true;
+    setInterval(checkAutoReturn, 1000);
+  }
 }
 
 function updateCycle(){
@@ -2129,6 +2143,35 @@ function toggleDefault302(){
   S.vent302=S.default302;
   document.getElementById('sw-302').classList.toggle('on',S.vent302);
   savePrefs();
+}
+
+// ══════════════════════════════════════════════════════════
+// RETOUR AUTOMATIQUE A LA SEQUENCE 
+// ══════════════════════════════════════════════════════════
+function checkAutoReturn(){
+  // Ne rien faire si ROSC actif ou déjà sur l'onglet rythme
+  if(S.roscActive) return;
+  if(document.getElementById('tab-rhythm').classList.contains('active')) return;
+
+  const inactiveSince=(Date.now()-S.lastInteraction)/1000;
+  if(inactiveSince<3) return;
+
+  // Déclencher si analyse en retard OU pré-alerte active
+  const cycleEl=(Date.now()-S.cycleStart)/1000;
+  const rem=S.CYCLE_S-cycleEl;
+  const analysisOverdue=S.cycleActive && S.cycleOverdue;
+  const preAlertDue=S.cycleActive && rem<=15 && !S.preAlertFired;
+  const adrOverdue=S.adrOverdue;
+
+  if(analysisOverdue || preAlertDue || adrOverdue){
+    // Trouver le bouton nav rythme et simuler le clic
+    const navBtns=document.querySelectorAll('.nb');
+    navBtns.forEach(btn=>{
+      if(btn.onclick&&btn.onclick.toString().includes("'rhythm'")){
+        showTab('rhythm',btn);
+      }
+    });
+  }
 }
 
 // ══════════════════════════════════════════════════════════

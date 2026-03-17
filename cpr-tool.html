@@ -392,6 +392,34 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <button class="give-btn blue" onclick="manualDrug('Amiodarone', 'amio-m-val', 'mg IV')">Donner</button>
       </div>
 
+      <!-- Lidocaïne 1ère dose -->
+      <div class="mcard amio" id="blk-lido1" style="display:none">
+        <div class="mname" style="color:var(--green2)">Lidocaïne — 1ère dose</div>
+        <div class="mdose" id="lido1-dose-lbl">— mg IV</div>
+        <div class="mrow">
+          <div class="mstatus" id="lido1-status">En attente</div>
+        </div>
+        <button class="mbtn" id="lido1-btn"
+          style="background:var(--green);color:#fff"
+          onclick="giveDrug('lido1',false)" disabled>Administrer</button>
+        <span class="force-link" id="lido1-force" style="display:none"
+          onclick="giveDrug('lido1',true)">Administrer maintenant (hors séquence)</span>
+      </div>
+
+      <!-- Lidocaïne 2ème dose -->
+      <div class="mcard amio" id="blk-lido2" style="display:none">
+        <div class="mname" style="color:var(--green2)">Lidocaïne — 2ème dose</div>
+        <div class="mdose" id="lido2-dose-lbl">— mg IV</div>
+        <div class="mrow">
+          <div class="mstatus" id="lido2-status">En attente</div>
+        </div>
+        <button class="mbtn" id="lido2-btn"
+          style="background:var(--green);color:#fff"
+          onclick="giveDrug('lido2',false)" disabled>Administrer</button>
+        <span class="force-link" id="lido2-force" style="display:none"
+          onclick="giveDrug('lido2',true)">Administrer maintenant (hors séquence)</span>
+      </div>
+
       <div class="mdrug-row">
         <div class="mdrug-info">
           <div class="mdrug-name">Autre médicament</div>
@@ -456,6 +484,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
   <!-- ── TAB PARAMS ── -->
   <div class="tab" id="tab-params">
+    
     <div class="card">
       <div class="ctitle">Protocole de référence</div>
       <div class="prow">
@@ -478,9 +507,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         Choc 1 → Choc 2 → Choc 3 + Adrénaline → Amiodarone 300mg → Choc 4 → Choc 5 + Amiodarone 150mg
       </div>
     </div>
+    
     <div class="card">
       <div class="ctitle">Énergie de défibrillation</div>
-
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
         <div>
           <div style="font-size:10px;color:var(--text3);margin-bottom:4px">Choc 1</div>
@@ -513,20 +542,49 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
           </div>
         </div>
       </div>
-
       <button id="save-energy-btn" onclick="saveEnergySettings()"
         style="width:100%;padding:10px;background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:var(--r);color:var(--yellow2);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px">
         Enregistrer
       </button>
-
       <div style="font-size:11px;color:var(--text3);line-height:1.6;padding:8px;background:var(--bg3);border-radius:var(--r)" id="energy-guideline-text"></div>
     </div>
+
     <div class="card">
-      <div class="ctitle">Paramètres</div>
+      <div class="ctitle">Antiarythmique</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button id="btn-amio" onclick="setAntiarrhythmic('amiodarone')"
+            style="flex:1;padding:10px;border-radius:var(--r);border:2px solid var(--blue);background:var(--blue-bg);color:var(--blue2);font-size:13px;font-weight:700;cursor:pointer">
+            Amiodarone
+          </button>
+          <button id="btn-lido" onclick="setAntiarrhythmic('lidocaine')"
+            style="flex:1;padding:10px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer">
+            Lidocaïne
+          </button>
+        </div>
+        <!-- Poids patient — visible uniquement si lidocaïne + AHA -->
+        <div id="weight-row" style="display:none;margin-bottom:12px">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Poids du patient</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" id="weight-slider" min="50" max="150" step="5" value="75"
+              oninput="updateWeightDisplay(this.value)"
+              style="flex:1">
+            <span id="weight-display"
+              style="font-size:18px;font-weight:700;color:var(--text);min-width:52px;text-align:right">
+              75 kg
+            </span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.6;padding:8px;background:var(--bg3);border-radius:var(--r)"
+          id="antiarr-guideline-text"></div>
+    </div>
+    
+    <div class="card">
+      <div class="ctitle">Visuel et paramètres de démarrage</div>
       <div class="prow"><div><div class="pname">Thème</div><div class="pdesc" id="theme-desc">Sombre (suit le système)</div></div><div class="tsw" id="sw-theme" onclick="toggleTheme()"></div></div>
       <div class="prow"><div><div class="pname">Synthèse vocale</div><div class="pdesc" id="speech-desc">Désactivée</div></div><div class="tsw" id="sw-speech" onclick="toggleSpeech()"></div></div>
       <div class="prow"><div><div class="pname">Mode 30:2 au démarrage</div><div class="pdesc">Activer 30:2 dès le lancement</div></div><div class="tsw" id="sw-302-def" onclick="toggleDefault302()"></div></div>
     </div>
+    
     <div class="card">
       <div class="ctitle">Installation PWA</div>
       <div style="font-size:12px;color:var(--text2);line-height:1.6">
@@ -536,11 +594,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       </div>
       <button id="pwa-install-btn" style="display:none;width:100%;margin-top:10px;padding:11px;background:var(--green-bg);border:1px solid var(--green);border-radius:var(--r);color:var(--green2);font-size:14px;font-weight:700;cursor:pointer" onclick="installPWA()">📲 Installer l'application</button>
     </div>
-        <div class="card">
+    
+    <div class="card">
       <div class="ctitle">Statut système</div>
       <div class="prow"><div><div class="pname">Wake Lock</div><div class="pdesc" id="wl-desc">Vérification…</div></div></div>
       <div class="prow"><div><div class="pname">Mode hors ligne</div><div class="pdesc" id="sw-desc">Service Worker non enregistré</div></div></div>
     </div>
+
     <div class="card" style="font-size:11px;color:var(--text3);line-height:1.6">
       <div style="text-align:center;margin-bottom:8px">CPR Assist v1.0 — ©Mathias Weber<br>Créé avec l'aide de claude.ai</div>
       <div style="border-top:1px solid var(--border);padding-top:8px;color:var(--text3)">
@@ -549,7 +609,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         L'auteur ne garantit pas la conformité de cet outil avec les recommandations en vigueur (ERC, ILCOR ou autres) ni son exactitude ou son exhaustivité. Aucune responsabilité ne saurait être engagée en cas d'erreur, d'omission ou d'utilisation inappropriée.<br><br>
         <span style="color:var(--text3)">Toujours se référer aux guidelines officiels et aux protocoles de votre service.</span>
       </div>
-</div>  </div>
+    </div>  
+  </div>
 
 </div><!-- /main -->
 
@@ -606,7 +667,17 @@ const S={
   adrDueAt:0, // timestamp when next adr is due
   adrOverdue:false,
 
+  //antiarrhythmique
+  antiarrhythmic: 'amiodarone', // 'amiodarone' ou 'lidocaine'
+  
+  //amiodarone
   amio300Given:false, amio150Given:false,
+
+  // lidocaïne
+  patientWeight: 75, // kg, pour calcul lidocaïne AHA
+  lido1Given: false,
+  lido2Given: false,
+  lido1GivenAtShock: 0,
 
   wakeLock:null,
   logs:[],
@@ -803,6 +874,76 @@ function changeEnergy(d){
 }
 
 // ══════════════════════════════════════════════════════════
+// ANTIARRHYTHMIQUE
+// ══════════════════════════════════════════════════════════
+function setAntiarrhythmic(drug){
+  S.antiarrhythmic=drug;
+  savePrefs();
+  const isAmio=drug==='amiodarone';
+
+  // Boutons
+  document.getElementById('btn-amio').style.border=isAmio?'2px solid var(--blue)':'1px solid var(--border)';
+  document.getElementById('btn-amio').style.background=isAmio?'var(--blue-bg)':'var(--bg3)';
+  document.getElementById('btn-amio').style.color=isAmio?'var(--blue2)':'var(--text2)';
+  document.getElementById('btn-lido').style.border=!isAmio?'2px solid var(--green)':'1px solid var(--border)';
+  document.getElementById('btn-lido').style.background=!isAmio?'var(--green-bg)':'var(--bg3)';
+  document.getElementById('btn-lido').style.color=!isAmio?'var(--green2)':'var(--text2)';
+
+  // Afficher curseur poids seulement si lidocaïne + AHA
+  document.getElementById('weight-row').style.display=
+    (!isAmio && S.guidelines==='AHA') ? 'block' : 'none';
+
+  updateAntiarrGuidelineText();
+  updateLidoDoses();
+  updateMedsInline();
+}
+
+function updateWeightDisplay(val){
+  S.patientWeight=parseInt(val);
+  document.getElementById('weight-display').textContent=val+' kg';
+  savePrefs();
+  updateLidoDoses();
+  updateMedsInline();
+}
+
+function updateLidoDoses(){
+  if(S.antiarrhythmic!=='lidocaine') return;
+  const w=S.patientWeight;
+
+  if(S.guidelines==='ERC'){
+    document.getElementById('lido1-dose-lbl').textContent='100 mg IV';
+    document.getElementById('lido2-dose-lbl').textContent='50 mg IV';
+  } else {
+    // AHA : 1–1.5 mg/kg puis 0.5–0.75 mg/kg
+    const d1min=Math.round(w*1.0), d1max=Math.round(w*1.5);
+    const d1med=Math.round(w*1.25);
+    const d2min=Math.round(w*0.5), d2max=Math.round(w*0.75);
+    const d2med=Math.round(w*0.625);
+    document.getElementById('lido1-dose-lbl').textContent=
+      `${d1med} mg IV  (${d1min}–${d1max} mg · 1–1.5 mg/kg · ${w} kg)`;
+    document.getElementById('lido2-dose-lbl').textContent=
+      `${d2med} mg IV  (${d2min}–${d2max} mg · 0.5–0.75 mg/kg · ${w} kg)`;
+  }
+}
+
+function updateAntiarrGuidelineText(){
+  const el=document.getElementById('antiarr-guideline-text');
+  if(!el) return;
+  if(S.antiarrhythmic==='amiodarone'){
+    el.innerHTML=S.guidelines==='ERC'
+      ? `<b style="color:var(--text2)">ERC 2021</b><br><br>Give amiodarone 300 mg IV for adult patients in cardiac arrest who are in VF/pVT after three shocks have been administered. Give a further dose of amiodarone 150 mg IV after five shocks.`
+      : `<b style="color:var(--text2)">AHA 2020</b><br><br>Amiodarone or lidocaine may be considered for VF/pVT that is unresponsive to defibrillation. Amiodarone: first dose 300 mg IV/IO, second dose 150 mg IV/IO.`;
+  } else {
+    el.innerHTML=S.guidelines==='ERC'
+      ? `<b style="color:var(--text2)">ERC 2021</b><br><br>Lidocaine 100 mg IV may be used as an alternative if amiodarone is not available or a local decision has been made to use lidocaine instead of amiodarone. An additional bolus of lidocaine 50 mg can also be given after five defibrillation attempts.`
+      : `<b style="color:var(--text2)">AHA 2020</b><br><br>First dose: 1–1.5 mg/kg IV/IO<br>Second dose: 0.5–0.75 mg/kg IV/IO<br><br>
+         <div style="margin-top:6px">
+           <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Poids : <b id="lido-weight-inline">${S.patientWeight} kg</b> — réglable dans les paramètres</div>
+         </div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
 // CYCLE
 // ══════════════════════════════════════════════════════════
 function startCycle(){
@@ -920,17 +1061,74 @@ function updateMedsInline(){
       document.getElementById('adr-force').style.display='none';
     }
 
-    // Amio 300 — show always for shockable, locked until 3rd shock
-    document.getElementById('blk-amio300').style.display=S.amio300Given?'none':'block';
-    if(!S.amio300Given){
-      if(S.shockCount>=3){
-        document.getElementById('amio300-btn').disabled=false;
-        document.getElementById('amio300-status').textContent=S.shockCount===3?'Indiquée (3ème choc)':'Disponible';
-        document.getElementById('amio300-force').style.display='none';
-      } else {
-        document.getElementById('amio300-btn').disabled=true;
-        document.getElementById('amio300-status').textContent='Après le 3ème choc ('+S.shockCount+'/3)';
-        document.getElementById('amio300-force').style.display='block';
+    if(S.antiarrhythmic==='amiodarone'){
+      // ── AMIODARONE ──
+      document.getElementById('blk-amio300').style.display=S.amio300Given?'none':'block';
+      document.getElementById('blk-lido1').style.display='none';
+      document.getElementById('blk-lido2').style.display='none';
+      if(!S.amio300Given){
+        if(S.shockCount>=3){
+          document.getElementById('amio300-btn').disabled=false;
+          document.getElementById('amio300-status').textContent=S.shockCount===3?'Indiquée (3ème choc)':'Disponible';
+          document.getElementById('amio300-force').style.display='none';
+        } else {
+          document.getElementById('amio300-btn').disabled=true;
+          document.getElementById('amio300-status').textContent='Après le 3ème choc ('+S.shockCount+'/3)';
+          document.getElementById('amio300-force').style.display='block';
+        }
+      }
+      if(S.amio300Given && !S.amio150Given){
+        document.getElementById('blk-amio150').style.display='block';
+        const needed=S.amio300GivenAtShock+2;
+        if(S.shockCount>=needed){
+          document.getElementById('amio150-btn').disabled=false;
+          document.getElementById('amio150-status').textContent=S.shockCount===needed?`Indiquée (${needed}ème choc)`:'Disponible';
+          document.getElementById('amio150-force').style.display='none';
+        } else {
+          document.getElementById('amio150-btn').disabled=true;
+          document.getElementById('amio150-status').textContent=`Après le ${needed}ème choc (${S.shockCount}/${needed})`;
+          document.getElementById('amio150-force').style.display='block';
+        }
+      } else if(S.amio150Given){
+        document.getElementById('blk-amio150').style.display='none';
+      }
+
+    } else {
+      // ── LIDOCAÏNE ──
+      document.getElementById('blk-amio300').style.display='none';
+      document.getElementById('blk-amio150').style.display='none';
+      updateLidoDoses();
+
+      // Dose 1
+      document.getElementById('blk-lido1').style.display=S.lido1Given?'none':'block';
+      if(!S.lido1Given){
+        const adrT=S.guidelines==='AHA'?2:3;
+        if(S.shockCount>=adrT){
+          document.getElementById('lido1-btn').disabled=false;
+          document.getElementById('lido1-status').textContent='Indiquée';
+          document.getElementById('lido1-force').style.display='none';
+        } else {
+          document.getElementById('lido1-btn').disabled=true;
+          document.getElementById('lido1-status').textContent=`Après le ${adrT}ème choc (${S.shockCount}/${adrT})`;
+          document.getElementById('lido1-force').style.display='block';
+        }
+      }
+
+      // Dose 2
+      if(S.lido1Given && !S.lido2Given){
+        document.getElementById('blk-lido2').style.display='block';
+        const needed=S.lido1GivenAtShock+2;
+        if(S.shockCount>=needed){
+          document.getElementById('lido2-btn').disabled=false;
+          document.getElementById('lido2-status').textContent=S.shockCount===needed?`Indiquée (${needed}ème choc)`:'Disponible';
+          document.getElementById('lido2-force').style.display='none';
+        } else {
+          document.getElementById('lido2-btn').disabled=true;
+          document.getElementById('lido2-status').textContent=`Après le ${needed}ème choc (${S.shockCount}/${needed})`;
+          document.getElementById('lido2-force').style.display='block';
+        }
+      } else if(S.lido2Given){
+        document.getElementById('blk-lido2').style.display='none';
       }
     }
 
@@ -977,6 +1175,27 @@ function giveDrug(drug, force){
     logEvent('Amiodarone 150 mg IV','drug');
     updateMedsInline();
   }
+  } else if(drug==='lido1'){
+  if(S.lido1Given && !force) return;
+  S.lido1Given=true;
+  S.lido1GivenAtShock=S.shockCount;
+  const lbl=document.getElementById('lido1-dose-lbl').textContent;
+  logEvent('Lidocaïne 1ère dose — '+lbl,'drug');
+  speak('Lidocaïne première dose administrée.');
+  document.getElementById('lido1-btn').disabled=true;
+  document.getElementById('lido1-force').style.display='none';
+  document.getElementById('lido1-status').textContent='Administrée';
+  updateMedsInline();
+  } else if(drug==='lido2'){
+    if(S.lido2Given && !force) return;
+    S.lido2Given=true;
+    const lbl=document.getElementById('lido2-dose-lbl').textContent;
+    logEvent('Lidocaïne 2ème dose — '+lbl,'drug');
+    speak('Lidocaïne deuxième dose administrée.');
+    document.getElementById('lido2-btn').disabled=true;
+    document.getElementById('lido2-force').style.display='none';
+    document.getElementById('lido2-status').textContent='Administrée';
+    updateMedsInline();
 }
 
 function updateAdr(){
@@ -1039,8 +1258,12 @@ function setGuidelines(g){
   // Recalcule l'affichage des meds si une réanimation est en cours
   updateMedsInline();
 
+  // Re-apply antiarrhythmic selection pour afficher/masquer curseur poids si besoin
+  setAntiarrhythmic(S.antiarrhythmic);
+
   //Refresh guideline text
   updateEnergyGuidelineText();
+  updateAntiarrGuidelineText();
 }
 
 function updateEnergyGuidelineText(){
@@ -1299,6 +1522,8 @@ function savePrefs(){
     themeManual: S._themeManual,
     guidelines: S.guidelines,
     energyCustom: S.energyCustom,
+    antiarrhythmic: S.antiarrhythmic,
+    patientWeight: S.patientWeight,
   }));
 }
 function loadPrefs(){
@@ -1314,6 +1539,8 @@ function loadPrefs(){
       S.energyCustom=p.energyCustom;
       S.energyLevels=[...p.energyCustom];
     }
+    if(p.antiarrhythmic) S.antiarrhythmic=p.antiarrhythmic;
+    if(p.patientWeight)  S.patientWeight=p.patientWeight;
   }catch(_){}
 }
 
@@ -1323,12 +1550,17 @@ function loadPrefs(){
 function init(){
   loadPrefs();
   setGuidelines(S.guidelines);
+  setAntiarrhythmic(S.antiarrhythmic);
+  document.getElementById('weight-slider').value=S.patientWeight;
+  updateWeightDisplay(S.patientWeight);
   // Appliquer l'énergie sauvegardée aux inputs
   ['e1','e2','e3'].forEach((id,i)=>{
     const el=document.getElementById(id);
     if(el) el.value=S.energyCustom[i];
   });
+  // Mettre à jour les textes des guidelines
   updateEnergyGuidelineText();
+  updateAntiarrGuidelineText()
   // Appliquer les prefs au DOM
   if(S.lightTheme && S._themeManual){
     document.documentElement.setAttribute('data-theme','light');

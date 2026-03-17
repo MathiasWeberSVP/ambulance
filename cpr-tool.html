@@ -217,6 +217,22 @@ input[type=range].lido-slider {
 .rosc-cb.checked{background:var(--green-bg);border-color:var(--green);color:var(--green2);}
 .rosc-text{font-size:13px;line-height:1.5;color:var(--text);}
 .rosc-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+
+.cause-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+  cursor:pointer;
+}
+.cause-item:last-child{border-bottom:none;}
+.cause-cb{
+  width:22px;height:22px;border-radius:6px;
+  border:2px solid var(--border);background:var(--bg3);
+  flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:13px;
+}
+.cause-cb.checked{background:var(--red-bg);border-color:var(--red);color:var(--red2);}
+.cause-text{font-size:13px;color:var(--text);line-height:1.4;}
+.cause-text.checked{color:var(--text2);}
 </style>
 </head>
 <body>
@@ -666,6 +682,21 @@ input[type=range].lido-slider {
     </div>
   </div>
 
+  <!-- ── TAB CAUSES ── -->
+  <div class="tab" id="tab-causes">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
+        <div class="ctitle" style="margin-bottom:0">Causes réversibles</div>
+        <button onclick="resetCauses()"
+          style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;
+                text-decoration:underline">
+          Tout effacer
+        </button>
+      </div>
+      <div id="causes-list"></div>
+    </div>
+  </div>
+
   <!-- ── TAB PARAMS ── -->
   <div class="tab" id="tab-params">
     
@@ -820,6 +851,7 @@ input[type=range].lido-slider {
   <button class="nb on" onclick="showTab('rhythm',this)"><span class="ni">❤️</span>Séquence</button>
   <button class="nb" onclick="showTab('meds',this)"><span class="ni">💊</span>Médic.</button>
   <button class="nb" onclick="showTab('vent',this)"><span class="ni">💨</span>Ventil.</button>
+  <button class="nb" onclick="showTab('causes',this)"><span class="ni">🔍</span>Causes</button>
   <button class="nb" onclick="showTab('logs',this)"><span class="ni">📋</span>Logs</button>
   <button class="nb" onclick="showTab('params',this)"><span class="ni">⚙️</span>Params</button>
 </nav>
@@ -1716,6 +1748,7 @@ function setGuidelines(g){
   //Refresh guideline text
   updateEnergyGuidelineText();
   updateAntiarrGuidelineText();
+  buildCausesList();
 
   if(S.roscActive) buildRoscChecklist();
 }
@@ -1944,6 +1977,76 @@ function toggleVent(mode){
       if(S.ventContInterval){clearInterval(S.ventContInterval);S.ventContInterval=null;}
     }
   }
+}
+
+// ══════════════════════════════════════════════════════════
+// CAUSES
+// ══════════════════════════════════════════════════════════
+const CAUSES={
+  ERC:[
+    {id:'c1', text:'Hypoxie'},
+    {id:'c2', text:'Hypovolémie'},
+    {id:'c3', text:'Hypothermie / Hyperthermie'},
+    {id:'c4', text:'Toxiques'},
+    {id:'c5', text:'Tamponnade cardiaque'},
+    {id:'c6', text:'Pneumothorax sous tension'},
+    {id:'c7', text:'Thrombose coronarienne'},
+    {id:'c8', text:'Thrombose pulmonaire'},
+  ],
+  AHA:[
+    {id:'c1', text:'Hypovolémie'},
+    {id:'c2', text:'Hypoxie'},
+    {id:'c3', text:'H⁺ — Acidose'},
+    {id:'c4', text:'Hypo / Hyperkaliémie'},
+    {id:'c5', text:'Hypothermie'},
+    {id:'c6', text:'Pneumothorax sous tension'},
+    {id:'c7', text:'Tamponade cardiaque'},
+    {id:'c8', text:'Toxiques'},
+    {id:'c9', text:'Thrombose pulmonaire'},
+    {id:'c10',text:'Thrombose coronarienne'},
+  ],
+};
+
+const causesChecked={};
+
+function buildCausesList(){
+  const items=CAUSES[S.guidelines]||CAUSES.ERC;
+  const container=document.getElementById('causes-list');
+  if(!container) return;
+  container.innerHTML=items.map(item=>`
+    <div class="cause-item" onclick="toggleCause('${item.id}')">
+      <div class="cause-cb${causesChecked[item.id]?' checked':''}"
+        id="cause-cb-${item.id}">
+        ${causesChecked[item.id]?'✓':''}
+      </div>
+      <div class="cause-text${causesChecked[item.id]?' checked':''}"
+        id="cause-txt-${item.id}">
+        ${item.text}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleCause(id){
+  causesChecked[id]=!causesChecked[id];
+  const cb=document.getElementById('cause-cb-'+id);
+  const txt=document.getElementById('cause-txt-'+id);
+  if(!cb||!txt) return;
+  if(causesChecked[id]){
+    cb.classList.add('checked');
+    cb.textContent='✓';
+    txt.classList.add('checked');
+    logEvent('Cause identifiée: '+txt.textContent.trim(),'event');
+  } else {
+    cb.classList.remove('checked');
+    cb.textContent='';
+    txt.classList.remove('checked');
+  }
+}
+
+function resetCauses(){
+  Object.keys(causesChecked).forEach(k=>delete causesChecked[k]);
+  buildCausesList();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -2177,6 +2280,7 @@ function init(){
   logEvent('Réanimation démarrée','event');
   S.fluidActiveType=S.fluidTypes[0];
   renderFluidUI();
+  buildCausesList();
 }
 init();
 </script>

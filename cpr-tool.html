@@ -199,6 +199,24 @@ input[type=range].lido-slider {
 .lido-ctrl-label {
   font-size:11px;color:var(--text3);min-width:52px;
 }
+/* ROSC */
+#rosc-block{display:none;}
+#rosc-block.show{display:block;}
+.rosc-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+}
+.rosc-item:last-child{border-bottom:none;}
+.rosc-cb{
+  width:22px;height:22px;border-radius:6px;
+  border:2px solid var(--border);background:var(--bg3);
+  flex-shrink:0;cursor:pointer;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;
+}
+.rosc-cb.checked{background:var(--green-bg);border-color:var(--green);color:var(--green2);}
+.rosc-text{font-size:13px;line-height:1.5;color:var(--text);}
+.rosc-sub{font-size:11px;color:var(--text3);margin-top:2px;}
 </style>
 </head>
 <body>
@@ -231,6 +249,23 @@ input[type=range].lido-slider {
   <!-- ── TAB RYTHME ── -->
   <div class="tab active" id="tab-rhythm">
 
+    <!-- ROSC -->
+    <div id="rosc-block">
+      <div class="card" style="border-color:var(--green);background:var(--green-bg)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:700;color:var(--green2)">✓ ROSC — Soins post-réanimation</div>
+          <div id="rosc-timer" style="font-size:12px;color:var(--green2);font-variant-numeric:tabular-nums"></div>
+        </div>
+        <div id="rosc-checklist"></div>
+      </div>
+    </div>
+
+    <div id="resume-cpr-hint" style="display:none;text-align:center;
+      font-size:12px;color:var(--text3);margin-bottom:8px">
+      Sélectionner un rythme ci-dessous en cas de nouvel ACR
+    </div>
+
+    <!--Analyse de rythme et défibrillation-->
     <div class="card">
       <div class="ctitle">Rythme à l'analyse</div>
       <div class="rgrid" id="rgrid">
@@ -441,6 +476,15 @@ input[type=range].lido-slider {
           onclick="giveDrug('lido2',true)">Administrer maintenant (hors séquence)</span>
       </div>
     </div>
+
+    <!--Bouton ROSC-->
+    <button id="rosc-btn" onclick="triggerROSC()"
+      style="width:100%;padding:14px;margin-top:4px;
+            background:var(--green-bg);border:2px solid var(--green);
+            border-radius:var(--r);color:var(--green2);
+            font-size:15px;font-weight:700;cursor:pointer">
+      ✓ ROSC
+    </button>
 
   </div><!-- /tab-rhythm -->
 
@@ -844,6 +888,8 @@ const S={
   fluidStart: 0,
   fluidTotal: 0,             // ml total administré
 
+  roscActive: false,
+
   wakeLock:null,
   logs:[],
   pwaPrompt:null,
@@ -996,6 +1042,7 @@ setInterval(()=>document.getElementById('main-timer').textContent=fmt(elapsed())
 // RHYTHM SELECTION
 // ══════════════════════════════════════════════════════════
 function selectRhythm(btn){
+  if(S.roscActive) resumeCPR();
   const rhythm=btn.dataset.r, shockable=btn.dataset.s==='1';
   S.currentRhythm=rhythm; S.isShockable=shockable;
   document.querySelectorAll('.rcard').forEach(b=>b.classList.remove('sel'));
@@ -1494,6 +1541,143 @@ function updateAdr(){
     // DON'T set adrActive=false or clearInterval here — keep ticking
   }
 }
+
+// ══════════════════════════════════════════════════════════
+// ROSC
+// ══════════════════════════════════════════════════════════
+const ROSC_ITEMS={
+  ERC:[
+    {id:'r1', text:'Évaluation ABCDE'},
+    {id:'r2', text:'SpO₂ 94–98%'},
+    {id:'r3', text:'PaCO₂ 35–45 mmHg'},
+    {id:'r4', text:'TAS > 100 mmHg / TAM > 60–65 mmHg',
+      sub:'→ Remplissage vasculaire · Considérer vasopresseurs'},
+    {id:'r5', text:'ECG 12 dérivations',
+      sub:'Répéter à l\'hôpital — STEMI transitoire possible'},
+    {id:'r6', text:'Identifier et traiter la cause'},
+    {id:'r7', text:'Contrôle de la température'},
+  ],
+  AHA:[
+    {id:'r1', text:'Gérer les voies aériennes'},
+    {id:'r2', text:'SpO₂ 90–98%'},
+    {id:'r3', text:'PaCO₂ 35–45 mmHg'},
+    {id:'r4', text:'TAM > 65 mmHg',
+      sub:'→ Remplissage vasculaire · Considérer vasopresseurs'},
+    {id:'r5', text:'ECG 12 dérivations',
+      sub:'Risque de faux positif élevé dans les 8 premières minutes'},
+    {id:'r6', text:'Identifier et traiter la cause'},
+  ],
+};
+
+const roscChecked={};
+let roscStart=0;
+let roscTimerInterval=null;
+
+function triggerROSC(){
+  if(S.roscActive) return;
+  S.roscActive=true;
+  roscStart=Date.now();
+
+  logEvent('ROSC','event');
+
+  // Arrêter le métronome
+  S.metroRunning=false;
+  if(S.metroTimeout) clearTimeout(S.metroTimeout);
+  // Réinitialiser affichage dots
+  for(let i=0;i<30;i++){
+    const d=document.getElementById('d'+i);
+    if(d) d.className='dot';
+  }
+  document.getElementById('metro-num').textContent='—';
+
+  // Arrêter le cycle RCP
+  if(S.cycleInterval) clearInterval(S.cycleInterval);
+  S.cycleActive=false;
+  document.getElementById('cycle-block').style.display='none';
+  document.getElementById('cycle-badge').textContent='';
+
+  // Masquer meds et bouton ROSC
+  document.getElementById('meds-block').style.display='none';
+  document.getElementById('rosc-btn').style.display='none';
+
+  // Remettre adrénaline à zéro
+  if(S.adrInterval) clearInterval(S.adrInterval);
+  S.adrActive=false; S.adrOverdue=false;
+
+  // Construire la checklist selon guidelines
+  buildRoscChecklist();
+
+  // Afficher le bloc
+  document.getElementById('rosc-block').classList.add('show');
+  document.getElementById('main').scrollTo({top:0,behavior:'smooth'});
+
+  // Timer post-ROSC
+  roscTimerInterval=setInterval(()=>{
+    const el=document.getElementById('rosc-timer');
+    if(el) el.textContent=fmt(Math.floor((Date.now()-roscStart)/1000))+' post-ROSC';
+  },500);
+
+  // Laisser ventilation continue active si elle l'était
+  // (S.ventCont reste inchangé)
+
+  document.getElementById('resume-cpr-hint').style.display='block';
+  // Réafficher la grille des rythmes pour reprise rapide
+  hideRhythmGrid(false);
+  document.getElementById('erow').style.display='flex';
+}
+
+function buildRoscChecklist(){
+  const items=ROSC_ITEMS[S.guidelines]||ROSC_ITEMS.ERC;
+  const container=document.getElementById('rosc-checklist');
+  container.innerHTML=items.map(item=>`
+    <div class="rosc-item" id="rosc-row-${item.id}">
+      <div class="rosc-cb" id="rosc-cb-${item.id}"
+        onclick="toggleRoscItem('${item.id}')"></div>
+      <div>
+        <div class="rosc-text" id="rosc-txt-${item.id}">${item.text}</div>
+        ${item.sub?`<div class="rosc-sub">${item.sub}</div>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleRoscItem(id){
+  roscChecked[id]=!roscChecked[id];
+  const cb=document.getElementById('rosc-cb-'+id);
+  const txt=document.getElementById('rosc-txt-'+id);
+  if(roscChecked[id]){
+    cb.classList.add('checked');
+    cb.textContent='✓';
+    txt.style.color='var(--text2)';
+  } else {
+    cb.classList.remove('checked');
+    cb.textContent='';
+    txt.style.textDecoration='none';
+    txt.style.color='var(--text)';
+  }
+}
+
+function resumeCPR(){
+  if(!S.roscActive) return;
+  S.roscActive=false;
+  if(roscTimerInterval) clearInterval(roscTimerInterval);
+
+  // Cacher ROSC
+  document.getElementById('rosc-block').classList.remove('show');
+
+  // Réafficher bouton ROSC et rythmes
+  document.getElementById('rosc-btn').style.display='block';
+
+  // Redémarrer métronome
+  S.metroRunning=true;
+  S.metroTick=0;
+  S.metroNextBeat=getAC().currentTime+0.05;
+  if(S.metroScheduler) clearInterval(S.metroScheduler);
+  S.metroScheduler=setInterval(metroSchedulerTick,SCHED_INTERVAL);
+
+  logEvent('Reprise RCP après ROSC','event');
+}
+
 // ══════════════════════════════════════════════════════════
 // Guidelines
 // ══════════════════════════════════════════════════════════
@@ -1532,6 +1716,8 @@ function setGuidelines(g){
   //Refresh guideline text
   updateEnergyGuidelineText();
   updateAntiarrGuidelineText();
+
+  if(S.roscActive) buildRoscChecklist();
 }
 
 function updateEnergyGuidelineText(){

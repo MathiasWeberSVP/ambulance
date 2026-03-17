@@ -184,6 +184,21 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 #status-bar{position:fixed;bottom:calc(var(--nh)+6px);right:10px;z-index:99;display:flex;gap:6px;}
 .spill{font-size:10px;padding:3px 8px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);color:var(--text3);}
 .spill.ok{border-color:var(--green);color:var(--green2);}
+
+/*Curseurs*/
+input[type=range].lido-slider {
+  height: 28px;
+  cursor: pointer;
+}
+.lido-ctrl-row {
+  display:flex;align-items:center;gap:8px;
+  padding:8px 0;
+  border-bottom:1px solid var(--border);
+}
+.lido-ctrl-row:last-of-type { border-bottom:none; }
+.lido-ctrl-label {
+  font-size:11px;color:var(--text3);min-width:52px;
+}
 </style>
 </head>
 <body>
@@ -363,16 +378,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <div class="mdose" id="lido1-dose-lbl">— mg IV</div>
         <!-- Curseurs AHA (masqués si ERC) -->
         <div id="lido1-aha-ctrl" style="display:none;margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <span style="font-size:11px;color:var(--text3);min-width:48px">Poids</span>
+          <div class="lido-ctrl-row">
+            <span class="lido-ctrl-label">Poids</span>
             <input type="range" id="lido1-weight" min="50" max="150" step="5" value="75"
               oninput="onLidoSlider('lido1')"
               style="flex:1">
             <span id="lido1-weight-disp"
               style="font-size:13px;font-weight:700;min-width:44px;text-align:right">75 kg</span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;color:var(--text3);min-width:48px">Dose</span>
+          <div class="lido-ctrl-row">
+            <span class="lido-ctrl-label">Dose</span>
             <input type="range" id="lido1-ratio" min="100" max="150" step="5" value="125"
               oninput="onLidoSlider('lido1')"
               style="flex:1">
@@ -397,16 +412,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <div class="mname" style="color:var(--green2)">Lidocaïne — 2ème dose</div>
         <div class="mdose" id="lido2-dose-lbl">— mg IV</div>
         <div id="lido2-aha-ctrl" style="display:none;margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <span style="font-size:11px;color:var(--text3);min-width:48px">Poids</span>
+          <div class="lido-ctrl-row">
+            <span class="lido-ctrl-label">Poids</span>
             <input type="range" id="lido2-weight" min="50" max="150" step="5" value="75"
               oninput="onLidoSlider('lido2')"
               style="flex:1">
             <span id="lido2-weight-disp"
               style="font-size:13px;font-weight:700;min-width:44px;text-align:right">75 kg</span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;color:var(--text3);min-width:48px">Dose</span>
+          <div class="lido-ctrl-row">
+            <span class="lido-ctrl-label">Dose</span>
             <input type="range" id="lido2-ratio" min="50" max="75" step="5" value="63"
               oninput="onLidoSlider('lido2')"
               style="flex:1">
@@ -469,29 +484,32 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
           <!-- ERC : boutons fixes -->
           <div id="lido-erc-ctrl" style="display:none;margin-top:8px">
-            <div style="display:flex;gap:8px">
-              <button class="give-btn" style="flex:1;background:var(--green)"
-                onclick="manualLido(100)">100 mg</button>
-              <button class="give-btn" style="flex:1;background:var(--green)"
-                onclick="manualLido(50)">50 mg</button>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <button class="ebtn" onclick="adjLidoERC(-50)">−</button>
+              <input id="lido-erc-dose" type="number" min="50" max="500" step="50" value="100"
+                style="width:64px;text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 4px;color:var(--green2);font-size:15px;font-weight:700">
+              <span style="font-size:12px;color:var(--text3)">mg IV</span>
+              <button class="ebtn" onclick="adjLidoERC(50)">+</button>
             </div>
-            <div style="font-size:10px;color:var(--text3);margin-top:4px">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:8px">
               1ère dose : 100 mg · 2ème dose : 50 mg
             </div>
+            <button class="give-btn" style="width:100%;background:var(--green)"
+              onclick="manualLidoERC()">Administrer</button>
           </div>
 
           <!-- AHA : curseurs + dose libre -->
           <div id="lido-aha-manual-ctrl" style="display:none;margin-top:8px">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              <span style="font-size:11px;color:var(--text3);min-width:48px">Poids</span>
+            <div class="lido-ctrl-row">
+              <span class="lido-ctrl-label">Poids</span>
               <input type="range" id="lido-m-weight" min="50" max="150" step="5" value="75"
                 oninput="onLidoManualSlider()"
                 style="flex:1">
               <span id="lido-m-weight-disp"
                 style="font-size:13px;font-weight:700;min-width:44px;text-align:right">75 kg</span>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              <span style="font-size:11px;color:var(--text3);min-width:48px">Dose</span>
+            <div class="lido-ctrl-row">
+              <span class="lido-ctrl-label">Dose</span>
               <input type="range" id="lido-m-ratio" min="50" max="150" step="5" value="125"
                 oninput="onLidoManualSlider()"
                 style="flex:1">
@@ -653,7 +671,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         </div>
         <!-- Poids patient — visible uniquement si lidocaïne + AHA -->
         <div id="weight-row" style="display:none;margin-bottom:12px">
-          <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Poids du patient</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Poids du patient par défaut</div>
           <div style="display:flex;align-items:center;gap:10px">
             <input type="range" id="weight-slider" min="50" max="150" step="5" value="75"
               oninput="updateWeightDisplay(this.value)"
@@ -1091,19 +1109,6 @@ function updateLidoManualRatioRange(){
   onLidoManualSlider();
 }
 
-function manualLido(dose){
-  const label=S.lido1Given?'2ème dose':'1ère dose';
-  logEvent('Lidocaïne '+label+' — '+dose+' mg IV','drug');
-  speak('Lidocaïne '+dose+' milligrammes administrée.');
-  if(!S.lido1Given){ S.lido1Given=true; S.lido1GivenAtShock=S.shockCount; }
-  else { S.lido2Given=true; }
-  updateLidoManualRatioRange();
-  updateMedsInline();
-  // Feedback
-  event.target.textContent='✓';
-  setTimeout(()=>{ event.target.textContent=dose+' mg'; },1200);
-}
-
 function manualLidoAHA(){
   const dose=parseInt(document.getElementById('lido-m-dose-input').value);
   const w=document.getElementById('lido-m-weight').value;
@@ -1121,9 +1126,7 @@ function manualLidoAHA(){
 
 // Affichage/masquage des contrôles lido selon guidelines
 function updateLidoManualUI(){
-  const isLido=S.antiarrhythmic==='lidocaine';
-  document.getElementById('lido-manual-block').style.display=isLido?'':'none';
-  if(!isLido) return;
+  document.getElementById('lido-manual-block').style.display='block';
   const isERC=S.guidelines==='ERC';
   document.getElementById('lido-erc-ctrl').style.display=isERC?'block':'none';
   document.getElementById('lido-aha-manual-ctrl').style.display=isERC?'none':'block';
@@ -1203,6 +1206,7 @@ function firePreAlert(){
   showBanner('pre','⏱ Précharger à '+S.energyLevels[S.energyIdx]+' joules — Analyse dans 15 s');
   hideRhythmGrid(false);
   setTimeout(()=>hideBanner(),13500);
+  document.getElementById('main').scrollTo({top:0, behavior:'smooth'});
 }
 
 function fireAnalysis(){
@@ -1214,7 +1218,7 @@ function fireAnalysis(){
   hideRhythmGrid(false);
   document.getElementById('erow').style.display='flex';
   setTimeout(()=>hideBanner(),8000);
-  // DON'T stop the interval — keep showing overdue timer
+  document.getElementById('main').scrollTo({top:0, behavior:'smooth'}); //Ramener le focus sur la grille de rythme pour la sélection après analyse
 }
 
 function triggerEarlyAnalysis(){
@@ -1307,17 +1311,17 @@ function updateMedsInline(){
       document.getElementById('blk-lido1').style.display=S.lido1Given?'none':'block';
       if(!S.lido1Given){
         const adrT=S.guidelines==='AHA'?2:3;
-        if(S.shockCount>=adrT){
+       // Lido toujours après le 3ème choc quelle que soit la guideline
+        if(S.shockCount>=3){
           document.getElementById('lido1-btn').disabled=false;
-          document.getElementById('lido1-status').textContent='Indiquée';
+          document.getElementById('lido1-status').textContent=S.shockCount===3?'Indiquée (3ème choc)':'Disponible';
           document.getElementById('lido1-force').style.display='none';
         } else {
           document.getElementById('lido1-btn').disabled=true;
-          document.getElementById('lido1-status').textContent=`Après le ${adrT}ème choc (${S.shockCount}/${adrT})`;
+          document.getElementById('lido1-status').textContent=`Après le 3ème choc (${S.shockCount}/3)`;
           document.getElementById('lido1-force').style.display='block';
         }
       }
-
       // Dose 2
       if(S.lido1Given && !S.lido2Given){
         document.getElementById('blk-lido2').style.display='block';
@@ -1383,8 +1387,7 @@ function giveDrug(drug, force){
     S.lido1Given=true;
     S.lido1GivenAtShock=S.shockCount;
     const lbl=document.getElementById('lido1-dose-lbl').textContent;
-    logEvent('Lidocaïne 1ère dose — '+lbl,'drug');
-    speak('Lidocaïne première dose administrée.');
+    logEvent('Lidocaïne — '+lbl,'drug');
     document.getElementById('lido1-btn').disabled=true;
     document.getElementById('lido1-force').style.display='none';
     document.getElementById('lido1-status').textContent='Administrée';
@@ -1395,8 +1398,7 @@ function giveDrug(drug, force){
     if(S.lido2Given && !force) return;
     S.lido2Given=true;
     const lbl=document.getElementById('lido2-dose-lbl').textContent;
-    logEvent('Lidocaïne 2ème dose — '+lbl,'drug');
-    speak('Lidocaïne deuxième dose administrée.');
+    logEvent('Lidocaïne — '+lbl,'drug');
     document.getElementById('lido2-btn').disabled=true;
     document.getElementById('lido2-force').style.display='none';
     document.getElementById('lido2-status').textContent='Administrée';
@@ -1537,6 +1539,25 @@ function manualOther(){
   logEvent((name+(dose?' '+dose:'')),'drug');
   document.getElementById('other-drug-name').value='';
   document.getElementById('other-drug-dose').value='';
+}
+function adjLidoERC(delta){
+  const el=document.getElementById('lido-erc-dose');
+  el.value=Math.max(50,Math.min(500,parseInt(el.value)+delta));
+}
+function manualLidoERC(){
+  const dose=parseInt(document.getElementById('lido-erc-dose').value);
+  const label=S.lido1Given?'2ème dose':'1ère dose';
+  logEvent('Lidocaïne '+label+' — '+dose+' mg IV','drug');
+  speak('Lidocaïne '+dose+' milligrammes administrée.');
+  if(!S.lido1Given){ S.lido1Given=true; S.lido1GivenAtShock=S.shockCount; }
+  else { S.lido2Given=true; }
+  // Pré-remplir avec 50mg pour la 2ème dose
+  document.getElementById('lido-erc-dose').value=50;
+  updateLidoManualRatioRange();
+  updateLidoManualUI();
+  updateMedsInline();
+  const btn=event.target; btn.textContent='✓';
+  setTimeout(()=>btn.textContent='Administrer',1200);
 }
 
 // ══════════════════════════════════════════════════════════

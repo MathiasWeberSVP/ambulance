@@ -528,6 +528,33 @@ input[type=range].lido-slider {
         </div>
       </div>
 
+      <div class="card">
+        <div class="ctitle">Fluides</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:12px;color:var(--text2)">Total administré</div>
+          <div id="fluid-total-badge2"
+            style="font-size:13px;font-weight:700;color:var(--blue2)">0 ml</div>
+        </div>
+        <div id="fluid-type-row2" style="display:flex;gap:8px;margin-bottom:10px"></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px"
+          id="fluid-vol-btns2"></div>
+        <div style="display:flex;gap:8px">
+          <button id="fluid-start-btn2"
+            style="flex:1;padding:10px;background:var(--blue);border:none;border-radius:var(--r);
+                  color:#fff;font-size:13px;font-weight:700;cursor:pointer"
+            onclick="startFluid()">▶ Démarrer</button>
+          <button id="fluid-stop-btn2"
+            style="flex:1;padding:10px;background:var(--bg4);border:1px solid var(--border);
+                  border-radius:var(--r);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer"
+            onclick="stopFluid()" disabled>⏹ Terminer</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:10px;padding:8px;
+                    background:var(--bg3);border-radius:var(--r);line-height:1.6">
+          <b style="color:var(--text2)">ERC 2025</b><br>
+          Give fluids during CPR only if cardiac arrest is caused by hypovolaemia.
+        </div>
+      </div>
+
       <div class="mdrug-row">
         <div class="mdrug-info">
           <div class="mdrug-name">Autre médicament</div>
@@ -685,6 +712,24 @@ input[type=range].lido-slider {
         <div style="font-size:11px;color:var(--text3);line-height:1.6;padding:8px;background:var(--bg3);border-radius:var(--r)"
           id="antiarr-guideline-text"></div>
     </div>
+
+    <div class="card">
+      <div class="ctitle">Fluides de remplissage</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button id="btn-rl" onclick="toggleFluidType('RL')"
+          style="flex:1;padding:10px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;border:2px solid var(--green);background:var(--green-bg);color:var(--green2)">
+          Ringer Lactate
+        </button>
+        <button id="btn-nacl" onclick="toggleFluidType('NaCl')"
+          style="flex:1;padding:10px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2)">
+          NaCl 0.9%
+        </button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);padding:8px;background:var(--bg3);border-radius:var(--r);line-height:1.6">
+        <b style="color:var(--text2)">ERC 2025</b><br>
+        Give fluids during CPR only if cardiac arrest is caused by hypovolaemia.
+      </div>
+    </div>
     
     <div class="card">
       <div class="ctitle">Visuel et paramètres de démarrage</div>
@@ -786,6 +831,13 @@ const S={
   lido1Given: false,
   lido2Given: false,
   lido1GivenAtShock: 0,
+
+  // fluids
+  fluidTypes: ['RL'],        // 'RL' et/ou 'NaCl'
+  fluidVolume: 250,          // ml présélectionné
+  fluidRunning: false,
+  fluidStart: 0,
+  fluidTotal: 0,             // ml total administré
 
   wakeLock:null,
   logs:[],
@@ -1357,6 +1409,7 @@ function updateMedsInline(){
       document.getElementById('blk-amio150').style.display='none';
     }
   }
+  renderFluidUI();
 }
 
 function giveDrug(drug, force){
@@ -1559,6 +1612,118 @@ function manualLidoERC(){
   const btn=event.target; btn.textContent='✓';
   setTimeout(()=>btn.textContent='Administrer',1200);
 }
+// ── FLUIDES ──────────────────────────────────────────
+function toggleFluidType(type){
+  const idx=S.fluidTypes.indexOf(type);
+  if(idx===-1) S.fluidTypes.push(type);
+  else if(S.fluidTypes.length>1) S.fluidTypes.splice(idx,1);
+  // Au moins un toujours sélectionné
+  if(S.fluidTypes.length===0) S.fluidTypes=[type];
+  savePrefs();
+  renderFluidUI();
+}
+
+function selectFluidActive(type){
+  S.fluidActiveType=type;
+  renderFluidUI();
+}
+
+function selectFluidVolume(vol){
+  S.fluidVolume=vol;
+  renderFluidUI();
+}
+
+function startFluid(){
+  if(S.fluidRunning) return;
+  S.fluidRunning=true;
+  S.fluidStart=Date.now();
+  const type=S.fluidActiveType||S.fluidTypes[0];
+  logEvent('Fluide démarré: '+type+' '+S.fluidVolume+' ml','access');
+  speak('Perfusion '+type+' '+S.fluidVolume+' millilitres démarrée.');
+  renderFluidUI();
+}
+
+function stopFluid(){
+  if(!S.fluidRunning) return;
+  S.fluidRunning=false;
+  const type=S.fluidActiveType||S.fluidTypes[0];
+  const dur=Math.round((Date.now()-S.fluidStart)/1000);
+  S.fluidTotal+=S.fluidVolume;
+  logEvent('Fluide terminé: '+type+' '+S.fluidVolume+' ml (durée: '+fmt(dur)+')','access');
+  renderFluidUI();
+}
+
+function renderFluidUI(){
+  // Initialiser fluidActiveType si besoin
+  if(!S.fluidActiveType||!S.fluidTypes.includes(S.fluidActiveType)){
+    S.fluidActiveType=S.fluidTypes[0];
+  }
+
+  // Afficher le bloc dans meds-block si au moins un fluide configuré
+  const blk=document.getElementById('blk-fluid');
+  if(blk) blk.style.display=S.currentRhythm?'block':'none';
+
+  // Mettre à jour les deux instances (séquence + tab-meds)
+  ['2'].forEach(suffix=>{
+    const typeRow=document.getElementById('fluid-type-row'+suffix);
+    const volBtns=document.getElementById('fluid-vol-btns'+suffix);
+    const startBtn=document.getElementById('fluid-start-btn'+suffix);
+    const stopBtn=document.getElementById('fluid-stop-btn'+suffix);
+    const badge=document.getElementById('fluid-total-badge'+(suffix||''));
+
+    // Badge total
+    if(badge) badge.textContent=S.fluidTotal+' ml total';
+
+    // Bouton bascule si deux fluides, label simple si un seul
+    if(S.fluidTypes.length===1){
+      typeRow.innerHTML=`<div style="font-size:13px;font-weight:600;color:var(--text)">${S.fluidTypes[0]==='RL'?'Ringer Lactate':'NaCl 0.9%'}</div>`;
+    } else {
+      typeRow.innerHTML=S.fluidTypes.map(t=>`
+        <button onclick="selectFluidActive('${t}')"
+          style="flex:1;padding:8px;border-radius:var(--r);font-size:13px;font-weight:700;
+                 cursor:pointer;border:${S.fluidActiveType===t?'2px solid var(--blue)':'1px solid var(--border)'};
+                 background:${S.fluidActiveType===t?'var(--blue-bg)':'var(--bg3)'};
+                 color:${S.fluidActiveType===t?'var(--blue2)':'var(--text2)'}">
+          ${t==='RL'?'Ringer Lactate':'NaCl 0.9%'}
+        </button>`).join('');
+    }
+
+    // Boutons volume
+    const vols=[100,250,500,1000];
+    volBtns.innerHTML=vols.map(v=>`
+      <button onclick="selectFluidVolume(${v})"
+        style="padding:10px 4px;border-radius:var(--r);font-size:13px;font-weight:700;
+               cursor:pointer;border:${S.fluidVolume===v?'2px solid var(--blue)':'1px solid var(--border)'};
+               background:${S.fluidVolume===v?'var(--blue-bg)':'var(--bg3)'};
+               color:${S.fluidVolume===v?'var(--blue2)':'var(--text)'}">
+        ${v<1000?v:'1\'000'}<br><span style="font-size:9px;font-weight:400">ml</span>
+      </button>`).join('');
+
+    // État des boutons action
+    if(startBtn){
+      startBtn.disabled=S.fluidRunning;
+      startBtn.style.opacity=S.fluidRunning?'0.4':'1';
+    }
+    if(stopBtn){
+      stopBtn.disabled=!S.fluidRunning;
+      stopBtn.style.background=S.fluidRunning?'var(--red)':'var(--bg4)';
+      stopBtn.style.color=S.fluidRunning?'#fff':'var(--text2)';
+      stopBtn.style.border=S.fluidRunning?'none':'1px solid var(--border)';
+    }
+    if(info) info.style.display=S.fluidRunning?'block':'none';
+  });
+
+  // Paramètres : boutons sélection fluide
+    const idMap={'RL':'btn-rl','NaCl':'btn-nacl'};
+    ['RL','NaCl'].forEach(t=>{
+      const btn=document.getElementById(idMap[t]);
+      if(!btn) return;
+      const sel=S.fluidTypes.includes(t);
+      btn.style.border=sel?'2px solid var(--green)':'1px solid var(--border)';
+      btn.style.background=sel?'var(--green-bg)':'var(--bg3)';
+      btn.style.color=sel?'var(--green2)':'var(--text2)';
+    });
+}
 
 // ══════════════════════════════════════════════════════════
 // MANUAL ENERGY TAB
@@ -1753,6 +1918,8 @@ function savePrefs(){
     energyCustom: S.energyCustom,
     antiarrhythmic: S.antiarrhythmic,
     patientWeight: S.patientWeight,
+    fluidTypes: S.fluidTypes,
+    fluidVolume: S.fluidVolume,
   }));
 }
 function loadPrefs(){
@@ -1770,6 +1937,8 @@ function loadPrefs(){
     }
     if(p.antiarrhythmic) S.antiarrhythmic=p.antiarrhythmic;
     if(p.patientWeight)  S.patientWeight=p.patientWeight;
+    if(p.fluidTypes) S.fluidTypes=p.fluidTypes;
+    if(p.fluidVolume) S.fluidVolume=p.fluidVolume;
   }catch(_){}
 }
 
@@ -1816,6 +1985,8 @@ function init(){
   startMetro();
   requestWakeLock();
   logEvent('Réanimation démarrée','event');
+  S.fluidActiveType=S.fluidTypes[0];
+  renderFluidUI();
 }
 init();
 </script>

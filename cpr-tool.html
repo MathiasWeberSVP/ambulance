@@ -1042,7 +1042,7 @@ function metroSchedulerTick(){
     }
 
     // Schedule the metro click
-    scheduleTone(880,0.04,0.28,'sine',t,1320,0.10);
+    scheduleTone(880,0.04,S.volumeMetro,'sine',t,1320,S.volumeMetro*0.4);
 
     // Capture tick index for display update
     const tickIdx=S.metroTick;

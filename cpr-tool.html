@@ -910,6 +910,7 @@ const S={
   _themeManual:false,
 
   // AudioContext metronome
+  compressor: null,
   AC:null,
   METRO_BPM:110,
   metroTick:0,       // 0-29 display counter
@@ -996,7 +997,7 @@ function scheduleTone(freq,dur,vol,type,t,freq2,vol2){
     const ac=getAC();
     const play=(f,v,tp)=>{
       const o=ac.createOscillator(), g=ac.createGain();
-      o.connect(g); g.connect(ac.destination);
+      o.connect(g); g.connect(S.compressor||ac.destination);
       o.type=tp||'sine'; o.frequency.value=f;
       g.gain.setValueAtTime(0,t);
       g.gain.linearRampToValueAtTime(v,t+0.01);
@@ -1010,7 +1011,17 @@ function scheduleTone(freq,dur,vol,type,t,freq2,vol2){
 
 // Schedule a vent bip at AC time t
 function scheduleVent(t){
-  scheduleTone(330,0.9,S.volumeVent,'sine',t,495,S.volumeVent*0.35);
+  const ac=getAC();
+  const v=S.volumeVent;
+
+  // Fréquence fondamentale
+  scheduleTone(440,0.8,v,'sine',t);
+  // Harmonique octave
+  scheduleTone(880,0.8,v*0.6,'sine',t);
+  // Harmonique tierce
+  scheduleTone(1320,0.8,v*0.3,'sine',t);
+  // Attaque courte avec sawtooth pour le transient
+  scheduleTone(440,0.05,v,'sawtooth',t);
 }
 
 // Lookahead scheduler — runs every 25ms, schedules beats 100ms ahead
@@ -2319,6 +2330,23 @@ if(window.matchMedia){
   });
 }
 
+// ══════════════════════════════════════════════════════════
+// VOLUME SONORE
+// ══════════════════════════════════════════════════════════
+function getAC(){
+  if(!S.AC){
+    S.AC=new(window.AudioContext||window.webkitAudioContext)();
+    // Compresseur sur la sortie principale
+    S.compressor=S.AC.createDynamicsCompressor();
+    S.compressor.threshold.value=-20;
+    S.compressor.knee.value=10;
+    S.compressor.ratio.value=12;
+    S.compressor.attack.value=0;
+    S.compressor.release.value=0.1;
+    S.compressor.connect(S.AC.destination);
+  }
+  return S.AC;
+}
 
 // ══════════════════════════════════════════════════════════
 // Persistence

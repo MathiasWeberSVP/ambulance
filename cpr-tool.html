@@ -805,6 +805,44 @@ input[type=range].lido-slider {
         Give fluids during CPR only if cardiac arrest is caused by hypovolaemia.
       </div>
     </div>
+
+    <div class="card">
+      <div class="ctitle">Volume des sons</div>
+
+      <div class="prow">
+        <div><div class="pname">Métronome</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="1" max="10" step="1" id="vol-metro"
+            oninput="setVolume('metro',this.value)"
+            style="width:200px">
+          <span id="vol-metro-disp" style="font-size:12px;font-weight:700;min-width:24px;text-align:right;color:var(--text2)">3</span>
+        </div>
+      </div>
+
+      <div class="prow">
+        <div><div class="pname">Insufflations</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="1" max="10" step="1" id="vol-vent"
+            oninput="setVolume('vent',this.value)"
+            style="width:200px">
+          <span id="vol-vent-disp" style="font-size:12px;font-weight:700;min-width:24px;text-align:right;color:var(--text2)">6</span>
+        </div>
+      </div>
+
+      <div class="prow">
+        <div><div class="pname">Alertes</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="1" max="10" step="1" id="vol-alert"
+            oninput="setVolume('alert',this.value)"
+            style="width:200px">
+          <span id="vol-alert-disp" style="font-size:12px;font-weight:700;min-width:24px;text-align:right;color:var(--text2)">7</span>
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;line-height:1.5">
+        Note : le volume système du téléphone doit également être au maximum pour un usage sur le terrain.
+      </div>
+    </div>
     
     <div class="card">
       <div class="ctitle">Visuel et paramètres de démarrage</div>
@@ -922,6 +960,11 @@ const S={
   lastInteraction: Date.now(),
   autoReturnActive: false,
 
+  //Volume
+  volumeMetro: 1.0,    
+  volumeVent: 2.0,     
+  volumeAlert: 2.0,
+
   wakeLock:null,
   logs:[],
   pwaPrompt:null,
@@ -967,7 +1010,7 @@ function scheduleTone(freq,dur,vol,type,t,freq2,vol2){
 
 // Schedule a vent bip at AC time t
 function scheduleVent(t){
-  scheduleTone(330,0.9,0.38,'sine',t,495,0.13);
+  scheduleTone(330,0.9,S.volumeVent,'sine',t,495,S.volumeVent*0.35);
 }
 
 // Lookahead scheduler — runs every 25ms, schedules beats 100ms ahead
@@ -1040,10 +1083,27 @@ function updateMetroDisplay(idx){
 }
 
 // Non-metro sounds (not time-critical, plain scheduling)
-function sndPreAlert(){ scheduleTone(660,0.18,0.5,'sine',getAC().currentTime); scheduleTone(880,0.18,0.5,'sine',getAC().currentTime+0.25); }
-function sndAnalysis(){ const t=getAC().currentTime; scheduleTone(660,0.15,0.55,'sine',t); scheduleTone(880,0.15,0.55,'sine',t+0.22); scheduleTone(1100,0.2,0.6,'sine',t+0.44); }
-function sndShock(){ const t=getAC().currentTime; scheduleTone(120,0.12,0.7,'sawtooth',t); scheduleTone(60,0.28,0.4,'sine',t+0.02); }
-function sndReady(){ const t=getAC().currentTime; scheduleTone(550,0.15,0.45,'sine',t); scheduleTone(770,0.15,0.45,'sine',t+0.22); }
+function sndPreAlert(){ 
+  const t=getAC().currentTime
+  scheduleTone(660,0.18,S.volumeAlert,'sine',t);
+  scheduleTone(880,0.18,S.volumeAlert,'sine',t+0.25);
+}
+function sndAnalysis(){ 
+  const t=getAC().currentTime;
+  scheduleTone(660,0.15,S.volumeAlert,'sine',t);
+  scheduleTone(880,0.15,S.volumeAlert,'sine',t+0.22);
+  scheduleTone(1100,0.2,S.volumeAlert,'sine',t+0.44);
+}
+function sndShock(){ 
+  const t=getAC().currentTime;
+  scheduleTone(120,0.12,S.volumeAlert,'sawtooth',t);
+  scheduleTone(60,0.28,S.volumeAlert*0.6,'sine',t+0.02);
+}
+function sndReady(){ 
+  const t=getAC().currentTime;
+  scheduleTone(550,0.15,S.volumeAlert,'sine',t);
+  scheduleTone(770,0.15,S.volumeAlert,'sine',t+0.22);
+}
 
 // ══════════════════════════════════════════════════════════
 // SPEECH
@@ -2149,6 +2209,20 @@ function toggleDefault302(){
   document.getElementById('sw-302').classList.toggle('on',S.vent302);
   savePrefs();
 }
+function setVolume(type, val){
+  const v=parseInt(val)/5;
+  if(type==='metro'){
+    S.volumeMetro=v;
+    document.getElementById('vol-metro-disp').textContent=val;
+  } else if(type==='vent'){
+    S.volumeVent=v;
+    document.getElementById('vol-vent-disp').textContent=val;
+  } else {
+    S.volumeAlert=v;
+    document.getElementById('vol-alert-disp').textContent=val;
+  }
+  savePrefs();
+}
 
 // ══════════════════════════════════════════════════════════
 // RETOUR AUTOMATIQUE A LA SEQUENCE 
@@ -2261,6 +2335,9 @@ function savePrefs(){
     patientWeight: S.patientWeight,
     fluidTypes: S.fluidTypes,
     fluidVolume: S.fluidVolume,
+    volumeMetro: S.volumeMetro,
+    volumeVent: S.volumeVent,
+    volumeAlert: S.volumeAlert,
   }));
 }
 function loadPrefs(){
@@ -2280,6 +2357,9 @@ function loadPrefs(){
     if(p.patientWeight)  S.patientWeight=p.patientWeight;
     if(p.fluidTypes) S.fluidTypes=p.fluidTypes;
     if(p.fluidVolume) S.fluidVolume=p.fluidVolume;
+    if(p.volumeMetro) S.volumeMetro=p.volumeMetro;
+    if(p.volumeVent)  S.volumeVent=p.volumeVent;
+    if(p.volumeAlert) S.volumeAlert=p.volumeAlert;
   }catch(_){}
 }
 
@@ -2322,7 +2402,13 @@ function init(){
     document.getElementById('sw-302').classList.add('on');
     document.getElementById('sw-302-def').classList.add('on');
   }
-  initDots();
+  //Sons
+  document.getElementById('vol-metro').value=Math.round(S.volumeMetro*5);
+  document.getElementById('vol-metro-disp').textContent=Math.round(S.volumeMetro*5);
+  document.getElementById('vol-vent').value=Math.round(S.volumeVent*5);
+  document.getElementById('vol-vent-disp').textContent=Math.round(S.volumeVent*5);
+  document.getElementById('vol-alert').value=Math.round(S.volumeAlert*5);
+  document.getElementById('vol-alert-disp').textContent=Math.round(S.volumeAlert*5);  initDots();
   startMetro();
   requestWakeLock();
   logEvent('Réanimation démarrée','event');

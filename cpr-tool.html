@@ -2269,22 +2269,28 @@ function checkAutoReturn(){
 // ══════════════════════════════════════════════════════════
 async function requestWakeLock(){
   if(!('wakeLock' in navigator)){
-    document.getElementById('wl-desc').textContent='Non supporté sur cet appareil';
+    document.getElementById('wl-desc').textContent='Non supporté (iOS < 16.4 ou navigateur incompatible)';
     return;
   }
   try{
     S.wakeLock=await navigator.wakeLock.request('screen');
     document.getElementById('wl-desc').textContent='Actif — écran maintenu allumé ✓';
-    S.wakeLock.addEventListener('release',()=>{
-      document.getElementById('wl-desc').textContent='Libéré (app en arrière-plan)';
+    S.wakeLock.addEventListener('release',async()=>{
+      document.getElementById('wl-desc').textContent='Libéré — tentative de réacquisition…';
+      // Réacquérir automatiquement après libération
+      if(document.visibilityState==='visible'){
+        await requestWakeLock();
+      }
     });
   }catch(e){
-    document.getElementById('wl-desc').textContent='Refusé par le navigateur';
+    document.getElementById('wl-desc').textContent='Refusé: '+e.message;
   }
 }
 // Re-acquire wake lock when page becomes visible again
-document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible' && !S.wakeLock) requestWakeLock();
+document.addEventListener('visibilitychange',async()=>{
+  if(document.visibilityState==='visible'){
+    await requestWakeLock();
+  }
 });
 
 // ══════════════════════════════════════════════════════════

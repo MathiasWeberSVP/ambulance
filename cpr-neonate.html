@@ -78,6 +78,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 #alert-bar.pre{background:var(--orange);color:#fff;}
 #alert-bar.analysis{background:var(--yellow);color:#000;}
 #alert-bar.compressions{background:var(--red);color:#fff;}
+#alert-bar.show ~ #main, 
+body.alert-visible #main {
+  padding-top: calc(10px + 38px);
+}
 
 /* SCROLL */
 #main{
@@ -259,8 +263,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   <!-- TAB SÉQUENCE -->
   <div class="tab active" id="tab-seq">
 
-    <!-- Bouton Accouchement / Naissance -->
-    <button id="birth-btn" class="delivery" onclick="onBirthBtn()">
+    <button id="birth-btn" class="delivery" onclick="handleBirthBtn()">
       🤰 Accouchement en cours
     </button>
 
@@ -302,10 +305,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div class="als-card">
         <div class="ctitle" style="color:var(--red2)">⚠ Envisager ALS</div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Poids du nouveau-né</div>
-        <div class="weight-display"><span id="als-weight">3.0</span> kg</div>
-        <div class="weight-ctrl">
-          <button class="wbtn" onclick="adjAlsWeight(-0.1)">−</button>
-          <button class="wbtn" onclick="adjAlsWeight(0.5)" style="font-size:20px">+</button>
+        <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+          <button class="wbtn" onclick="adjWeight('als',-0.1)">−</button>
+          <input id="als-weight-input" type="number" min="0.3" max="5" step="0.1" value="3.0"
+            oninput="onWeightInput('als',this.value)"
+            style="flex:1;text-align:center;background:var(--bg3);border:1px solid var(--border);
+                  border-radius:var(--r);padding:10px 4px;color:var(--yellow2);
+                  font-size:28px;font-weight:700;font-variant-numeric:tabular-nums">
+          <span style="font-size:16px;color:var(--text3)">kg</span>
+          <button class="wbtn" onclick="adjWeight('als',0.1)">+</button>
         </div>
         <div id="als-drugs"></div>
       </div>
@@ -318,12 +326,33 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <div class="card">
       <div class="ctitle">Médicaments néonat</div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Poids du nouveau-né</div>
-      <div class="weight-display"><span id="med-weight">3.0</span> kg</div>
-      <div class="weight-ctrl">
-        <button class="wbtn" onclick="adjMedWeight(-0.1)">−</button>
-        <button class="wbtn" onclick="adjMedWeight(0.5)" style="font-size:20px">+</button>
+      <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+        <button class="wbtn" onclick="adjWeight('med',-0.1)">−</button>
+        <input id="med-weight-input" type="number" min="0.3" max="5" step="0.1" value="3.0"
+          oninput="onWeightInput('med',this.value)"
+          style="flex:1;text-align:center;background:var(--bg3);border:1px solid var(--border);
+                border-radius:var(--r);padding:10px 4px;color:var(--yellow2);
+                font-size:28px;font-weight:700;font-variant-numeric:tabular-nums">
+        <span style="font-size:16px;color:var(--text3)">kg</span>
+        <button class="wbtn" onclick="adjWeight('med',0.1)">+</button>
       </div>
       <div id="med-drugs" style="margin-top:12px"></div>
+    </div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div class="ctitle">Autre médicament</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="other-neo-name" placeholder="Nom"
+          style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+                padding:8px 10px;color:var(--text);font-size:13px">
+        <input id="other-neo-dose" placeholder="Dose"
+          style="width:90px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+                padding:8px 10px;color:var(--text);font-size:13px">
+      </div>
+      <button onclick="manualOtherNeo()"
+        style="width:100%;padding:10px;background:var(--bg4);border:1px solid var(--border);
+              border-radius:var(--r);color:var(--text);font-size:13px;font-weight:700;cursor:pointer">
+        Enregistrer
+      </button>
     </div>
   </div>
 
@@ -426,14 +455,15 @@ const S={
   soundOn:true, speechOn:false,
   lightTheme:false, _themeManual:false,
   AC:null, compressor:null,
+  firstAnalysisDone: false,
 
   // Volumes
   volumeVent:2.0, volumeAlert:2.0, volumeMetro:1.0,
 
   // Timing
-  birthTime:null,       // timestamp naissance
-  deliveryMode:true,    // true = avant naissance, bouton "Accouchement en cours"
-  started:false,        // true après naissance
+  birthTime: Date.now(),       // timestamp naissance
+  deliveryMode: false,    
+  started: true,        // true après naissance
 
   // Métronome
   metroTick:0,          // 0-3
@@ -632,7 +662,10 @@ function fmt(s){
 function fmtOverdue(s){return`+${fmt(s)}`;}
 
 setInterval(()=>{
-  if(!S.birthTime) return;
+  if(!S.birthTime){
+    document.getElementById('main-timer').textContent='00:00';
+    return;
+  }
   const el=Math.floor((Date.now()-S.birthTime)/1000);
   document.getElementById('main-timer').textContent=fmt(el);
   updateSpo2Highlight(el);
@@ -642,24 +675,49 @@ setInterval(()=>{
 // BOUTON ACCOUCHEMENT / NAISSANCE
 // ═══════════════════════════════════════════════════════
 function onBirthBtn(){
+  clearTimeout(birthBtnTimeout);
+  // Pause et reset
+  S.birthTime=null;
+  S.started=false;
+  // Arrêter le cycle
+  if(S.cycleInterval){clearInterval(S.cycleInterval);S.cycleInterval=null;}
+  S.cycleActive=false;
+  S.cycleOverdue=false;
+  S.firstAnalysisDone=false;
+  document.getElementById('cycle-block').style.display='none';
+  document.getElementById('cycle-time').textContent='00:30';
+  document.getElementById('cbar').style.width='0%';
+  document.getElementById('cbar').style.background='var(--blue2)';
+  // Arrêter le métronome
+  stopMetro();
+  // Basculer le bouton en mode "Naissance"
+  birthBtnState='birth';
   const btn=document.getElementById('birth-btn');
-  if(S.deliveryMode){
-    // Passage en mode "Naissance imminente" — pause et reset
-    S.deliveryMode=false;
-    btn.textContent='👶 Naissance';
-    btn.classList.remove('delivery');
-    // Métronome tourne déjà (démarré dans init)
-    // Le chrono ne tourne pas encore
-  } else {
-    // Naissance — démarrer chrono et cycle
-    S.birthTime=Date.now();
-    S.started=true;
-    btn.style.display='none';
-    document.getElementById('timer-sub').textContent='depuis la naissance';
-    logEvent('Naissance','event');
-    speak('Naissance. Démarrer les ventilations.');
-    startCycle();
-  }
+  btn.textContent='👶 Naissance';
+  btn.classList.remove('delivery');
+  btn.style.display='block';
+  logEvent('Accouchement en cours — attente naissance','event');
+}
+
+function onNaissanceBtn(){
+  S.birthTime=Date.now();
+  S.started=true;
+  S.metroTick=0;
+  document.getElementById('birth-btn').style.display='none';
+  document.getElementById('timer-sub').textContent='depuis la naissance';
+  setMetroBPM(guidelineVentBPM());
+  startMetro();
+  logEvent('Naissance','event');
+  speak('Naissance. Démarrer les ventilations.');
+  startCycle();
+}
+
+let birthBtnTimeout=null;
+let birthBtnState='delivery'; // 'delivery' | 'birth'
+
+function handleBirthBtn(){
+  if(birthBtnState==='delivery') onBirthBtn();
+  else onNaissanceBtn();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -697,7 +755,7 @@ function updateCycle(){
     if(rem<=5 && !S.preAlertFired){
       S.preAlertFired=true;
       sndAlert();
-      speak('Évaluation imminente.');
+      speak('Évaluation dans 5 secondes.');
     }
   } else {
     if(!S.cycleOverdue){
@@ -719,8 +777,8 @@ function updateCycle(){
 
 function fireAnalysis(){
   sndAnalysis();
-  speak('Évaluation. Ausculter le cœur.');
-  showBanner('analysis','🔍 ÉVALUATION — Ausculter le cœur');
+  speak('Évaluation');
+  showBanner('analysis','🔍 ÉVALUATION');
   document.getElementById('analysis-card').style.display='block';
   buildHRBtns();
   buildSpo2();
@@ -730,9 +788,13 @@ function fireAnalysis(){
 
 function showBanner(type,msg){
   const b=document.getElementById('alert-bar');
-  b.className='show '+type;b.textContent=msg;
+  b.className='show '+type; b.textContent=msg;
+  document.getElementById('main').style.paddingTop='48px';
 }
-function hideBanner(){document.getElementById('alert-bar').className='';}
+function hideBanner(){
+  document.getElementById('alert-bar').className='';
+  document.getElementById('main').style.paddingTop='10px';
+}
 
 // ═══════════════════════════════════════════════════════
 // TAP HR
@@ -741,19 +803,23 @@ let tapTimeout=null;
 function tapHR(){
   const now=Date.now();
   tapTimes.push(now);
-  // Garder seulement les 8 derniers taps
-  if(tapTimes.length>8) tapTimes.shift();
-  // Reset si pause > 3s
+  // Garder seulement les 4 derniers taps (= 3 intervalles)
+  if(tapTimes.length>3) tapTimes.shift();
+
   if(tapTimeout) clearTimeout(tapTimeout);
-  tapTimeout=setTimeout(()=>{ tapTimes=[]; document.getElementById('tap-result').textContent='—'; },3000);
+  tapTimeout=setTimeout(()=>{
+    tapTimes=[];
+    document.getElementById('tap-result').textContent='—';
+  },3000);
 
   if(tapTimes.length>=2){
+    // Moyenne sur les 3 derniers intervalles max
     const intervals=[];
-    for(let i=1;i<tapTimes.length;i++) intervals.push(tapTimes[i]-tapTimes[i-1]);
+    for(let i=1;i<tapTimes.length;i++)
+      intervals.push(tapTimes[i]-tapTimes[i-1]);
     const avg=intervals.reduce((a,b)=>a+b,0)/intervals.length;
     const bpm=Math.round(60000/avg);
     document.getElementById('tap-result').textContent=bpm;
-    // Afficher les boutons HR si pas encore visibles
     document.getElementById('hr-btns').style.display='flex';
   }
 }
@@ -818,8 +884,7 @@ function hrLabel(r){
 }
 
 function handleHRHigh(){
-  speak('Bonne fréquence cardiaque. Évaluer la respiration spontanée.');
-  showBanner('pre','✓ FC > seuil — Évaluer la respiration spontanée');
+  showBanner('pre','✓ FC > 100/min — Évaluer la respiration spontanée');
   // Continuer ventilations
   switchToVent();
   startCycle();
@@ -827,16 +892,25 @@ function handleHRHigh(){
 
 function handleHRMid(){
   // CORFA uniquement : 60-100
-  speak('Ventilation cent pour cent oxygène.');
-  showBanner('pre','💨 FC 60-100 — Ventilation FiO₂ 100%');
+  showBanner('pre','💨 FC 60-100/min — Ventilation FiO₂ 100%');
   switchToVent();
   startCycle();
 }
 
 function handleHRLow(prevResult){
-  speak('Fréquence cardiaque basse. Démarrer les compressions thoraciques.');
-  showBanner('compressions','⚠ FC < seuil — Compressions thoraciques 3:1');
+  // CORFA : à la 1ère analyse, même si <60, on ventile FiO2 100% d'abord
+  if(S.guidelines==='CORFA' && !S.firstAnalysisDone){
+    showBanner('pre','⚠ FC < 60/min — Ventilation FiO₂ 100%');
+    switchToVent();
+    S.firstAnalysisDone=true;
+    startCycle();
+    return;
+  }
+
+  // AHA/ERC ou CORFA 2ème analyse+ : compressions
+  showBanner('compressions','⚠ FC < 60/min — Compressions thoraciques 3:1');
   switchToCompressions();
+  S.firstAnalysisDone=true;
   startCycle();
 
   // Deux analyses consécutives à <60 → proposer ALS
@@ -952,18 +1026,25 @@ const ALS_DRUGS={
 const alsGiven={};
 const alsTimers={};
 
-function adjAlsWeight(delta){
-  const step=delta>0?0.5:0.1;
-  S.alsWeight=Math.round(Math.max(0.3,Math.min(5,S.alsWeight+(delta>0?step:-step)))*10)/10;
-  document.getElementById('als-weight').textContent=S.alsWeight.toFixed(1);
-  renderAlsDrugs();
+function adjWeight(ctx, delta){
+  const id=ctx+'-weight-input';
+  const el=document.getElementById(id);
+  if(!el) return;
+  const val=Math.round((parseFloat(el.value)+delta)*10)/10;
+  el.value=Math.max(0.3,Math.min(5,val)).toFixed(1);
+  onWeightInput(ctx, el.value);
 }
 
-function adjMedWeight(delta){
-  const step=delta>0?0.5:0.1;
-  S.medWeight=Math.round(Math.max(0.3,Math.min(5,S.medWeight+(delta>0?step:-step)))*10)/10;
-  document.getElementById('med-weight').textContent=S.medWeight.toFixed(1);
-  renderMedDrugs();
+function onWeightInput(ctx, val){
+  const w=parseFloat(val);
+  if(isNaN(w)||w<0.3||w>5) return;
+  if(ctx==='als'){
+    S.alsWeight=w;
+    renderAlsDrugs();
+  } else {
+    S.medWeight=w;
+    renderMedDrugs();
+  }
 }
 
 function renderDrugs(containerId, weight, context){
@@ -983,20 +1064,31 @@ function renderDrugs(containerId, weight, context){
       </div>`;
     }
 
-    if(drug.fixed && drug.unit==='ml/kg'){
-      const vol=Math.round(weight*10);
-      doseText=drug.dose;
-      calcText=`${vol} ml`;
-    } else if(drug.dosePerKg){
-      const dose=Math.round(weight*drug.dosePerKg);
-      doseText=drug.dose;
-      calcText=`${dose} ${drug.unit}`;
-    } else if(drug.min && drug.max){
+    if(drug.min && drug.max){
       const dmin=Math.round(weight*drug.min);
       const dmax=Math.round(weight*drug.max);
       const dmed=Math.round(weight*(drug.min+drug.max)/2);
+      const sliderId=context+'-'+drug.id+'-slider';
+      const calcId=context+'-'+drug.id+'-calcval';
       doseText=drug.dose;
-      calcText=`${dmed} ${drug.unit}  (${dmin}–${dmax} ${drug.unit})`;
+
+      return `<div class="drug-row-neo" id="${context}-row-${drug.id}">
+        <div class="drug-name-neo" style="color:var(--orange2)">${drug.name}</div>
+        <div class="drug-dose-neo">${doseText}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
+          <span style="font-size:11px;color:var(--text3);min-width:32px">${dmin} ${drug.unit}</span>
+          <input type="range" id="${sliderId}" min="${dmin}" max="${dmax}" step="1" value="${dmed}"
+            oninput="document.getElementById('${calcId}').textContent=this.value+' ${drug.unit}'"
+            style="flex:1">
+          <span style="font-size:11px;color:var(--text3);min-width:32px;text-align:right">${dmax} ${drug.unit}</span>
+        </div>
+        <div class="drug-calc-neo" id="${calcId}">${dmed} ${drug.unit}</div>
+        <button class="drug-btn-neo" id="${context+'-'+drug.id+'-btn'}"
+          onclick="giveDrugNeoSlider('${drug.id}','${context}','${sliderId}','${drug.unit}',${drug.interval||0})">
+          Administrer
+        </button>
+        <div class="drug-cd-neo" id="${context+'-'+drug.id+'-cd'}"></div>
+      </div>`;
     }
 
     const timerId=context+'-'+drug.id+'-cd';
@@ -1013,6 +1105,13 @@ function renderDrugs(containerId, weight, context){
       <div class="drug-cd-neo" id="${timerId}"></div>
     </div>`;
   }).join('');
+}
+
+function giveDrugNeoSlider(drugId, context, sliderId, unit, intervalSec){
+  const slider=document.getElementById(sliderId);
+  const dose=slider?slider.value:'?';
+  const doseText=dose+' '+unit;
+  giveDrugNeo(drugId, context, doseText, intervalSec);
 }
 
 function renderAlsDrugs(){ renderDrugs('als-drugs', S.alsWeight, 'als'); }
@@ -1052,6 +1151,16 @@ function giveDrugNeo(drugId, context, doseText, intervalSec){
   }
 }
 
+function manualOtherNeo(){
+  const name=document.getElementById('other-neo-name').value.trim();
+  const dose=document.getElementById('other-neo-dose').value.trim();
+  if(!name) return;
+  logEvent(name+(dose?' — '+dose:''),'drug');
+  speak(name+' administré.');
+  document.getElementById('other-neo-name').value='';
+  document.getElementById('other-neo-dose').value='';
+}
+
 // ═══════════════════════════════════════════════════════
 // GUIDELINES
 // ═══════════════════════════════════════════════════════
@@ -1071,9 +1180,9 @@ function setGuidelines(g){
   });
 
   const descs={
-    CORFA:'CORFA — 3 seuils FC : >100 / 60-100 / <60 /min · Ventilations 50/min',
-    AHA:'AHA — 2 seuils FC : ≥60 / <60 /min · Ventilations 45/min',
-    ERC:'ERC — 2 seuils FC : ≥60 / <60 /min · Ventilations 40/min',
+    CORFA:'CORFA — 3 seuils FC : >100 / 60-100 / <60 min⁻¹ · Ventilations 50 min⁻¹',
+    AHA:'AHA — 2 seuils ≥60 / <60 min⁻¹ · Ventilations 45 min⁻¹',
+    ERC:'ERC — 2 seuils FC : ≥60 / <60 min⁻¹ · Ventilations 40 min⁻¹',
   };
   document.getElementById('guidelines-desc').textContent=descs[g]||'';
 
@@ -1252,8 +1361,19 @@ function init(){
     document.getElementById('sw-speech').classList.add('on');
     document.getElementById('speech-desc').textContent='Activée';
   }
+
+  // Bouton accouchement visible 5s seulement
+  birthBtnState='delivery';
+  birthBtnTimeout=setTimeout(()=>{
+    // Pas cliqué dans les 5s = naissance déjà eu lieu, cacher le bouton
+    document.getElementById('birth-btn').style.display='none';
+    logEvent('Naissance (présumée)','event');
+  }, 5000);
+
   requestWakeLock();
   logEvent('Préparation néonat démarrée','event');
+  // Démarrer le chrono et le cycle immédiatement
+  startCycle();
 }
 init();
 </script>

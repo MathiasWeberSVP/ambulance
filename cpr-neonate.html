@@ -1007,17 +1007,17 @@ function updateSpo2Highlight(elapsedSec){
 // ═══════════════════════════════════════════════════════
 const ALS_DRUGS={
   CORFA:[
-    {id:'adr',name:'Adrénaline',dose:'10–30 µg/kg',min:10,max:30,unit:'µg',interval:180,intervalLabel:'3–5 min'},
+    {id:'adr',name:'Adrénaline',dose:'10–30 µg/kg',min:10,max:30,unit:'µg',interval:240,intervalLabel:'3–5 min'},
     {id:'nacl',name:'NaCl 0.9%',dose:'10 ml/kg',fixed:true,unit:'ml/kg'},
     {id:'glucose',name:'Hypoglycémie',dose:'Traiter si besoin',fixed:true,noBtn:true},
   ],
   AHA:[
-    {id:'adr',name:'Adrénaline',dose:'10–30 µg/kg',min:10,max:30,unit:'µg',interval:60,intervalLabel:'1 min'},
+    {id:'adr',name:'Adrénaline',dose:'10–30 µg/kg',min:10,max:30,unit:'µg',interval:240,intervalLabel:'3-5 min'},
     {id:'nacl',name:'NaCl 0.9%',dose:'10 ml/kg',fixed:true,unit:'ml/kg'},
     {id:'glucose',name:'Glucose',dose:'200 mg/kg',dosePerKg:200,unit:'mg'},
   ],
   ERC:[
-    {id:'adr',name:'Adrénaline',dose:'10–30 µg/kg',min:10,max:30,unit:'µg',interval:60,intervalLabel:'1 min'},
+    {id:'adr',name:'Adrénaline',dose:'10–30 µg/kg',min:10,max:30,unit:'µg',interval:240,intervalLabel:'4 min'},
     {id:'nacl',name:'NaCl 0.9%',dose:'10 ml/kg',fixed:true,unit:'ml/kg'},
     {id:'glucose',name:'Glucose',dose:'200 mg/kg',dosePerKg:200,unit:'mg'},
   ],
@@ -1119,7 +1119,6 @@ function renderMedDrugs(){ renderDrugs('med-drugs', S.medWeight, 'med'); }
 
 function giveDrugNeo(drugId, context, doseText, intervalSec){
   logEvent(drugId==='nacl'?`NaCl 0.9% ${doseText}`:drugId==='glucose'?`Glucose ${doseText}`:`Adrénaline ${doseText}`,'drug');
-  speak(drugId==='adr'?'Adrénaline administrée.':drugId==='nacl'?'NaCl administré.':'Glucose administré.');
 
   if(intervalSec>0){
     const btnId=context+'-'+drugId+'-btn';
@@ -1142,7 +1141,7 @@ function giveDrugNeo(drugId, context, doseText, intervalSec){
         if(!overdue){
           overdue=true;
           if(btnEl) btnEl.disabled=false;
-          speak('Adrénaline prête à administrer.');
+          speak('Administrer adrénaline.');
         }
         cdEl.textContent='⚠ En retard: '+fmtOverdue(Math.abs(rem));
         cdEl.style.color='var(--red2)';

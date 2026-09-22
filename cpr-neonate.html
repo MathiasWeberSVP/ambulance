@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="manifest.json">
+<title>CPR Assist — Néonat</title>
+<style>
+:root{
+  --bg:#0a0a0a;--bg2:#141414;--bg3:#1e1e1e;--bg4:#2a2a2a;
+  --border:#333;
+  --text:#f0f0f0;--text2:#aaa;--text3:#555;
+  --red:#e83535;--red2:#ff6b6b;--red-bg:#2a1010;
+  --orange:#e87835;--orange2:#ffaa66;--orange-bg:#2a1808;
+  --green:#35c97a;--green2:#66ffaa;--green-bg:#0a2018;
+  --blue:#4da6ff;--blue2:#88ccff;--blue-bg:#0a1828;
+  --yellow:#f0c040;--yellow2:#ffe080;--yellow-bg:#2a2008;
+  --r:10px;--rlg:14px;
+  --hh:110px;--nh:60px;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+}
+html[data-theme=light]{
+  --bg:#f0f0f0;--bg2:#fff;--bg3:#e8e8e8;--bg4:#ddd;--border:#ccc;
+  --text:#111;--text2:#555;--text3:#999;
+  --red:#c0392b;--red2:#e74c3c;--red-bg:#fdecea;
+  --orange:#d35400;--orange2:#e67e22;--orange-bg:#fef0e6;
+  --green:#1a8a45;--green2:#27ae60;--green-bg:#e8f8ee;
+  --blue:#1a6fad;--blue2:#2980b9;--blue-bg:#e8f4fd;
+  --yellow:#b8860b;--yellow2:#d4a017;--yellow-bg:#fef9e6;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden;}
+
+/* HEADER */
+#hdr{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:var(--bg);border-bottom:1px solid var(--border);
+  height:var(--hh);padding:10px 14px 8px;
+  display:flex;flex-direction:column;gap:8px;
+  transition:background .3s,border-color .3s;
+}
+.hr{display:flex;align-items:center;justify-content:space-between;}
+#main-timer{
+  font-size:36px;font-weight:700;font-variant-numeric:tabular-nums;
+  letter-spacing:-1.5px;line-height:1;
+}
+#timer-sub{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.hright{display:flex;align-items:center;gap:8px;}
+.ibtn{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--bg3);border:1px solid var(--border);
+  color:var(--text2);font-size:17px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+}
+.ibtn.muted{border-color:var(--red);color:var(--red2);}
+.ibtn.speech-on{border-color:var(--green);color:var(--green2);}
+
+/* Métronome 4 temps */
+.metro4-wrap{display:flex;gap:8px;align-items:center;justify-content:center;}
+.beat{
+  flex:1;height:14px;border-radius:4px;
+  background:var(--bg4);transition:background .05s;
+}
+.beat.act{background:var(--green2);box-shadow:0 0 8px var(--green2);}
+.beat.done{background:var(--bg3);}
+#metro-bpm{font-size:10px;color:var(--text3);text-align:right;white-space:nowrap;}
+
+/* ALERT BANNER */
+#alert-bar{
+  position:fixed;top:var(--hh);left:0;right:0;z-index:99;
+  padding:9px 14px;font-size:13px;font-weight:700;text-align:center;
+  transform:translateY(-110%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+#alert-bar.show{transform:translateY(0);}
+#alert-bar.pre{background:var(--orange);color:#fff;}
+#alert-bar.analysis{background:var(--yellow);color:#000;}
+#alert-bar.compressions{background:var(--red);color:#fff;}
+
+/* SCROLL */
+#main{
+  position:fixed;top:var(--hh);bottom:var(--nh);
+  left:0;right:0;overflow-y:auto;
+  padding:10px 12px 20px;
+  -webkit-overflow-scrolling:touch;
+}
+.tab{display:none;}
+.tab.active{display:block;}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rlg);padding:14px;margin-bottom:11px;}
+.ctitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:11px;}
+
+/* BOUTON NAISSANCE */
+#birth-btn{
+  width:100%;padding:18px;margin-bottom:12px;
+  border-radius:var(--rlg);border:2px solid var(--green);
+  background:var(--green-bg);color:var(--green2);
+  font-size:18px;font-weight:700;cursor:pointer;
+  transition:all .15s;
+}
+#birth-btn.delivery{
+  border-color:var(--orange);background:var(--orange-bg);color:var(--orange2);
+}
+#birth-btn:active{transform:scale(0.98);}
+
+/* CYCLE */
+#cycle-block{display:none;}
+#cycle-block.show{display:block;}
+.cycard{background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--rlg);padding:14px;margin-bottom:11px;}
+#cycle-time{font-size:52px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--blue2);text-align:center;line-height:1;letter-spacing:-1px;}
+#cycle-time.overdue{color:var(--red2);}
+#cycle-sub{font-size:11px;text-align:center;margin-top:4px;color:var(--blue);}
+#cycle-sub.overdue{color:var(--red2);}
+.cbar-wrap{height:5px;background:var(--bg4);border-radius:3px;margin-top:11px;}
+.cbar{height:5px;background:var(--blue2);border-radius:3px;transition:width .5s linear;width:0%;}
+
+/* ANALYSE */
+.analysis-btns{display:flex;gap:10px;margin-top:10px;}
+.hr-btn{
+  flex:1;padding:14px 8px;border-radius:var(--r);
+  font-size:15px;font-weight:700;cursor:pointer;border:2px solid;
+  text-align:center;transition:all .15s;
+}
+.hr-btn:active{transform:scale(0.97);}
+.hr-btn.high{border-color:var(--green);background:var(--green-bg);color:var(--green2);}
+.hr-btn.mid{border-color:var(--orange);background:var(--orange-bg);color:var(--orange2);}
+.hr-btn.low{border-color:var(--red);background:var(--red-bg);color:var(--red2);}
+.hr-btn.sel{opacity:0.5;}
+
+/* TAP HR */
+#tap-block{margin-top:12px;}
+#tap-btn{
+  width:100%;padding:16px;border-radius:var(--r);
+  background:var(--bg3);border:1px solid var(--border);
+  color:var(--text);font-size:14px;font-weight:600;cursor:pointer;
+}
+#tap-result{
+  text-align:center;font-size:28px;font-weight:700;
+  font-variant-numeric:tabular-nums;color:var(--yellow2);
+  margin-top:8px;min-height:36px;
+}
+#tap-label{text-align:center;font-size:11px;color:var(--text3);}
+
+/* SPO2 */
+#spo2-block{margin-top:12px;}
+.spo2-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 0;border-bottom:1px solid var(--border);
+  font-size:13px;
+}
+.spo2-row:last-child{border-bottom:none;}
+.spo2-row.current{
+  color:var(--yellow2);font-weight:700;
+  background:var(--yellow-bg);border-radius:var(--r);
+  padding:7px 8px;margin:2px -8px;
+}
+.spo2-time{color:var(--text3);min-width:48px;}
+.spo2-val{font-weight:600;}
+
+/* ALS */
+#als-block{display:none;}
+#als-block.show{display:block;}
+.als-card{background:var(--red-bg);border:1px solid var(--red);border-radius:var(--rlg);padding:14px;margin-bottom:11px;}
+.weight-display{
+  font-size:48px;font-weight:700;color:var(--yellow2);
+  text-align:center;font-variant-numeric:tabular-nums;
+}
+.weight-ctrl{display:flex;align-items:center;gap:12px;justify-content:center;margin:10px 0;}
+.wbtn{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--bg3);border:1px solid var(--border);
+  color:var(--text);font-size:26px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.drug-row-neo{
+  padding:12px 0;border-bottom:1px solid var(--border);
+}
+.drug-row-neo:last-child{border-bottom:none;}
+.drug-name-neo{font-size:14px;font-weight:700;margin-bottom:4px;}
+.drug-dose-neo{font-size:12px;color:var(--text2);margin-bottom:8px;}
+.drug-calc-neo{font-size:20px;font-weight:700;color:var(--yellow2);margin-bottom:8px;}
+.drug-btn-neo{
+  padding:9px 18px;border-radius:var(--r);border:none;
+  font-size:14px;font-weight:700;cursor:pointer;
+  background:var(--orange);color:#fff;
+}
+.drug-cd-neo{font-size:13px;color:var(--text3);margin-top:4px;font-variant-numeric:tabular-nums;}
+
+/* LOGS */
+.lbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px;}
+.lbtn{padding:11px 6px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;cursor:pointer;text-align:center;}
+#stop-btn{width:100%;padding:13px;background:var(--red-bg);border:2px solid var(--red);border-radius:var(--r);color:var(--red2);font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.lentry{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.lentry:last-child{border-bottom:none;}
+.lt{color:var(--text3);font-size:11px;font-variant-numeric:tabular-nums;min-width:48px;padding-top:1px;}
+.lev{color:var(--text);font-size:12px;flex:1;line-height:1.4;}
+.ltag{font-size:10px;padding:2px 6px;border-radius:10px;flex-shrink:0;font-weight:600;}
+.ltag.drug{background:var(--orange-bg);color:var(--orange2);}
+.ltag.access{background:var(--blue-bg);color:var(--blue2);}
+.ltag.airway{background:var(--green-bg);color:var(--green2);}
+.ltag.event{background:var(--bg4);color:var(--text2);}
+
+/* PARAMS */
+.prow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.prow:last-child{border-bottom:none;}
+.pname{font-size:14px;font-weight:500;}
+.pdesc{font-size:11px;color:var(--text3);margin-top:2px;}
+.tsw{width:48px;height:28px;background:var(--bg4);border-radius:14px;position:relative;cursor:pointer;border:1px solid var(--border);flex-shrink:0;transition:background .2s;}
+.tsw.on{background:var(--green);border-color:var(--green);}
+.tsw::after{content:'';position:absolute;width:22px;height:22px;background:var(--text3);border-radius:50%;top:2px;left:2px;transition:all .2s;}
+.tsw.on::after{left:22px;background:#fff;}
+
+/* NAV */
+#nav{position:fixed;bottom:0;left:0;right:0;height:var(--nh);background:var(--bg);border-top:1px solid var(--border);display:flex;z-index:100;}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text3);font-size:10px;border:none;background:none;}
+.nb .ni{font-size:22px;line-height:1;}
+.nb.on{color:var(--green2);}
+
+/* STOP OVERLAY */
+#stop-ov{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.9);align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:20px;}
+#stop-ov.show{display:flex;}
+#stop-ov h2{font-size:20px;font-weight:700;color:var(--red2);}
+#logs-export{width:100%;max-height:55vh;overflow-y:auto;background:var(--bg2);border-radius:var(--r);padding:12px;font-size:11px;font-family:monospace;white-space:pre-wrap;color:var(--text2);border:1px solid var(--border);}
+.so-btns{display:flex;gap:10px;width:100%;}
+.so-btns button{flex:1;padding:12px;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;border:none;}
+#copy-btn{background:var(--blue);color:#fff;}
+#dl-btn{background:var(--green);color:#fff;}
+#close-so{background:var(--bg3);color:var(--text2);border:1px solid var(--border);}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div class="hr">
+    <div>
+      <div id="main-timer">00:00</div>
+      <div id="timer-sub">Naissance</div>
+    </div>
+    <div class="hright">
+      <button class="ibtn" id="speech-btn" onclick="toggleSpeech()">🗣</button>
+      <button class="ibtn" id="sound-btn" onclick="toggleSound()">🔊</button>
+    </div>
+  </div>
+  <div class="hr">
+    <div class="metro4-wrap" id="metro4" style="flex:1;margin-right:8px"></div>
+    <div id="metro-bpm">— /min</div>
+  </div>
+</div>
+
+<div id="alert-bar"></div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- TAB SÉQUENCE -->
+  <div class="tab active" id="tab-seq">
+
+    <!-- Bouton Accouchement / Naissance -->
+    <button id="birth-btn" class="delivery" onclick="onBirthBtn()">
+      🤰 Accouchement en cours
+    </button>
+
+    <!-- Chronomètre + cycle -->
+    <div id="cycle-block">
+      <div class="cycard">
+        <div class="ctitle" id="cycle-phase">VENTILATIONS EN COURS</div>
+        <div id="cycle-time">0:30</div>
+        <div id="cycle-sub">jusqu'à la prochaine évaluation</div>
+        <div class="cbar-wrap"><div class="cbar" id="cbar"></div></div>
+      </div>
+    </div>
+
+    <!-- Analyse -->
+    <div class="card" id="analysis-card" style="display:none">
+      <div class="ctitle">Évaluation</div>
+
+      <!-- Tap HR -->
+      <div id="tap-block">
+        <button id="tap-btn" onclick="tapHR()">👆 Taper au rythme du cœur</button>
+        <div id="tap-result">—</div>
+        <div id="tap-label">fréquence estimée</div>
+      </div>
+
+      <!-- Résultats -->
+      <div class="analysis-btns" id="hr-btns" style="display:none">
+        <!-- Rempli dynamiquement selon guidelines -->
+      </div>
+
+      <!-- SpO2 cibles -->
+      <div id="spo2-block">
+        <div class="ctitle" style="margin-top:12px;margin-bottom:8px">Cibles SpO₂</div>
+        <div id="spo2-rows"></div>
+      </div>
+    </div>
+
+    <!-- ALS -->
+    <div id="als-block">
+      <div class="als-card">
+        <div class="ctitle" style="color:var(--red2)">⚠ Envisager ALS</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Poids du nouveau-né</div>
+        <div class="weight-display"><span id="als-weight">3.0</span> kg</div>
+        <div class="weight-ctrl">
+          <button class="wbtn" onclick="adjAlsWeight(-0.1)">−</button>
+          <button class="wbtn" onclick="adjAlsWeight(0.5)" style="font-size:20px">+</button>
+        </div>
+        <div id="als-drugs"></div>
+      </div>
+    </div>
+
+  </div><!-- /tab-seq -->
+
+  <!-- TAB MÉDICS -->
+  <div class="tab" id="tab-meds">
+    <div class="card">
+      <div class="ctitle">Médicaments néonat</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Poids du nouveau-né</div>
+      <div class="weight-display"><span id="med-weight">3.0</span> kg</div>
+      <div class="weight-ctrl">
+        <button class="wbtn" onclick="adjMedWeight(-0.1)">−</button>
+        <button class="wbtn" onclick="adjMedWeight(0.5)" style="font-size:20px">+</button>
+      </div>
+      <div id="med-drugs" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- TAB LOGS -->
+  <div class="tab" id="tab-logs">
+    <div class="card">
+      <div class="ctitle">Enregistrement rapide</div>
+      <div class="lbtns">
+        <button class="lbtn" onclick="logEvent('Accès veineux','access')">💉 Accès veineux</button>
+        <button class="lbtn" onclick="logEvent('Accès osseux','access')">🦴 Accès osseux</button>
+        <button class="lbtn" onclick="logEvent('I-Gel posé','airway')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align:middle;margin-right:3px"><path stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M4,3 L4,13"/><path stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none" d="M4,13 Q4,17 8,18"/><ellipse cx="13" cy="19" rx="5" ry="2.5" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="4" cy="7" r="1.8" stroke="currentColor" stroke-width="1.4" fill="none"/><line x1="5.5" y1="7" x2="4" y2="7" stroke="currentColor" stroke-width="1.2"/></svg>I-Gel
+        </button>
+        <button class="lbtn" onclick="logEvent('Intubation','airway')">🫁 Intubation</button>
+      </div>
+      <button id="stop-btn" onclick="showStop()">⛔ Arrêter la réanimation</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">Journal</div>
+      <div id="logs-list"><div style="color:var(--text3);font-size:13px">Aucun événement</div></div>
+    </div>
+  </div>
+
+  <!-- TAB PARAMS -->
+  <div class="tab" id="tab-params">
+    <div class="card">
+      <div class="ctitle">Guidelines</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button id="btn-corfa" onclick="setGuidelines('CORFA')"
+          style="flex:1;padding:10px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;border:2px solid var(--orange);background:var(--orange-bg);color:var(--orange2)">
+          CORFA
+        </button>
+        <button id="btn-aha" onclick="setGuidelines('AHA')"
+          style="flex:1;padding:10px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2)">
+          AHA
+        </button>
+        <button id="btn-erc" onclick="setGuidelines('ERC')"
+          style="flex:1;padding:10px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2)">
+          ERC
+        </button>
+      </div>
+      <div id="guidelines-desc" style="font-size:12px;color:var(--text2);margin-bottom:4px"></div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">Affichage</div>
+      <div class="prow">
+        <div><div class="pname">Thème</div><div class="pdesc" id="theme-desc">Sombre</div></div>
+        <div class="tsw" id="sw-theme" onclick="toggleTheme()"></div>
+      </div>
+      <div class="prow">
+        <div><div class="pname">Synthèse vocale</div><div class="pdesc" id="speech-desc">Désactivée</div></div>
+        <div class="tsw" id="sw-speech" onclick="toggleSpeech()"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">Statut</div>
+      <div class="prow"><div><div class="pname">Wake Lock</div><div class="pdesc" id="wl-desc">Vérification…</div></div></div>
+      <div class="prow"><div><div class="pname">Mode hors ligne</div><div class="pdesc" id="sw-desc">—</div></div></div>
+    </div>
+
+    <div class="card" style="font-size:11px;color:var(--text3);line-height:1.6">
+      <b style="color:var(--text2)">⚠ Avertissement</b><br>
+      Cet outil est une aide mnémotechnique destinée à des professionnels formés. Il ne remplace pas le jugement clinique ni les protocoles institutionnels. L'auteur ne garantit pas la conformité avec les recommandations en vigueur.
+    </div>
+
+    <div class="card" style="text-align:center;color:var(--text3);font-size:11px">
+      CPR Assist — Néonat v1.0 — ©Mathias Weber
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- NAV -->
+<nav id="nav">
+  <button class="nb on" onclick="showTab('seq',this)"><span class="ni">👶</span>Séquence</button>
+  <button class="nb" onclick="showTab('meds',this)"><span class="ni">💊</span>Médic.</button>
+  <button class="nb" onclick="showTab('logs',this)"><span class="ni">📋</span>Logs</button>
+  <button class="nb" onclick="showTab('params',this)"><span class="ni">⚙️</span>Params</button>
+</nav>
+
+<!-- STOP OVERLAY -->
+<div id="stop-ov">
+  <h2>Arrêt de réanimation</h2>
+  <div id="logs-export"></div>
+  <div class="so-btns">
+    <button id="copy-btn" onclick="copyLogs()">📋 Copier</button>
+    <button id="dl-btn" onclick="downloadLogs()">⬇ Télécharger</button>
+    <button id="close-so" onclick="closeStop()">Continuer</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const S={
+  guidelines:'CORFA',
+  soundOn:true, speechOn:false,
+  lightTheme:false, _themeManual:false,
+  AC:null, compressor:null,
+
+  // Volumes
+  volumeVent:2.0, volumeAlert:2.0, volumeMetro:1.0,
+
+  // Timing
+  birthTime:null,       // timestamp naissance
+  deliveryMode:true,    // true = avant naissance, bouton "Accouchement en cours"
+  started:false,        // true après naissance
+
+  // Métronome
+  metroTick:0,          // 0-3
+  metroRunning:false,
+  metroNextBeat:0,
+  metroScheduler:null,
+  metroBPM:50,          // selon guidelines
+  metroMode:'vent',     // 'vent' | 'compressions'
+
+  // Cycle
+  cycleActive:false,
+  cycleStart:0,
+  CYCLE_S:30,
+  cycleInterval:null,
+  cycleOverdue:false,
+  cycleOverdueStart:0,
+  analysisCount:0,      // nombre d'analyses effectuées
+  lastHRResult:null,    // résultat dernière analyse
+
+  // ALS
+  alsActive:false,
+  alsWeight:3.0,
+  medWeight:3.0,
+
+  // Adrénaline ALS
+  adrNeoActive:false,
+  adrNeoStart:0,
+  adrNeoInterval:null,
+  ADR_NEO_S:180,
+
+  logs:[],
+};
+
+// Tap HR
+let tapTimes=[];
+
+// ═══════════════════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════════════════
+function getAC(){
+  if(!S.AC){
+    S.AC=new(window.AudioContext||window.webkitAudioContext)();
+    S.compressor=S.AC.createDynamicsCompressor();
+    S.compressor.threshold.value=-20;
+    S.compressor.knee.value=10;
+    S.compressor.ratio.value=12;
+    S.compressor.attack.value=0;
+    S.compressor.release.value=0.1;
+    S.compressor.connect(S.AC.destination);
+  }
+  return S.AC;
+}
+['touchstart','click'].forEach(ev=>
+  document.addEventListener(ev,()=>{try{getAC().resume();}catch(_){}},{once:true,passive:true})
+);
+
+function scheduleTone(freq,dur,vol,type,t,freq2,vol2){
+  if(!S.soundOn) return;
+  try{
+    const ac=getAC();
+    const play=(f,v,tp)=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g);g.connect(S.compressor||ac.destination);
+      o.type=tp||'sine';o.frequency.value=f;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(v,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+      o.start(t);o.stop(t+dur+0.05);
+    };
+    play(freq,vol,type);
+    if(freq2) play(freq2,vol2||vol*0.4,'sine');
+  }catch(_){}
+}
+
+function sndVent(t){
+  // Son d'insufflation — plus doux que adulte
+  scheduleTone(330,0.8,S.volumeVent,'sine',t,660,S.volumeVent*0.3);
+}
+function sndCompression(t){
+  scheduleTone(880,0.05,S.volumeMetro,'sine',t,1320,S.volumeMetro*0.3);
+}
+function sndAlert(){
+  const t=getAC().currentTime;
+  scheduleTone(660,0.18,S.volumeAlert,'sine',t);
+  scheduleTone(880,0.18,S.volumeAlert,'sine',t+0.25);
+}
+function sndAnalysis(){
+  const t=getAC().currentTime;
+  scheduleTone(660,0.15,S.volumeAlert,'sine',t);
+  scheduleTone(880,0.15,S.volumeAlert,'sine',t+0.22);
+  scheduleTone(1100,0.2,S.volumeAlert,'sine',t+0.44);
+}
+
+// ═══════════════════════════════════════════════════════
+// SPEECH
+// ═══════════════════════════════════════════════════════
+function speak(txt){
+  if(!S.speechOn||!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang='fr-FR';u.rate=1.05;u.pitch=1;
+  const fr=speechSynthesis.getVoices().find(v=>v.lang.startsWith('fr'));
+  if(fr) u.voice=fr;
+  speechSynthesis.speak(u);
+}
+if(window.speechSynthesis) speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
+
+// ═══════════════════════════════════════════════════════
+// MÉTRONOME 4 TEMPS — AudioContext scheduler
+// ═══════════════════════════════════════════════════════
+const LOOKAHEAD=0.1;
+const SCHED_INTERVAL=25;
+
+function initMetro4(){
+  const w=document.getElementById('metro4');
+  w.innerHTML='';
+  for(let i=0;i<4;i++){
+    const d=document.createElement('div');
+    d.className='beat';d.id='b'+i;w.appendChild(d);
+  }
+}
+
+function startMetro(){
+  const ac=getAC();
+  S.metroRunning=true;
+  S.metroNextBeat=ac.currentTime+0.1;
+  S.metroScheduler=setInterval(metroTick,SCHED_INTERVAL);
+  document.getElementById('metro-bpm').textContent=S.metroBPM+' bpm';
+}
+
+function stopMetro(){
+  S.metroRunning=false;
+  if(S.metroScheduler){clearInterval(S.metroScheduler);S.metroScheduler=null;}
+  // Reset visuel
+  for(let i=0;i<4;i++){const d=document.getElementById('b'+i);if(d)d.className='beat';}
+  document.getElementById('metro-bpm').textContent='— bpm';
+}
+
+function setMetroBPM(bpm){
+  S.metroBPM=bpm;
+  document.getElementById('metro-bpm').textContent=bpm+' bpm';
+}
+
+function metroTick(){
+  if(!S.metroRunning) return;
+  const ac=getAC();
+  const beatDur=60/S.metroBPM;
+
+  while(S.metroNextBeat < ac.currentTime+LOOKAHEAD){
+    const t=S.metroNextBeat;
+    const idx=S.metroTick;
+
+    // Son selon le mode
+    if(S.metroMode==='vent'){
+      sndVent(t);
+    } else {
+      // 3:1 — son vent sur le 4ème temps
+      if(idx===3) sndVent(t);
+      else sndCompression(t);
+    }
+
+    // Affichage
+    const delayMs=(t-ac.currentTime)*1000;
+    setTimeout(()=>updateBeatDisplay(idx),Math.max(0,delayMs));
+
+    S.metroTick=(S.metroTick+1)%4;
+    S.metroNextBeat+=beatDur;
+  }
+}
+
+function updateBeatDisplay(idx){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('b'+i);
+    if(!d) return;
+    d.className='beat'+(i<idx?' done':i===idx?' act':'');
+  }
+  // Couleur selon mode
+  const active=document.getElementById('b'+idx);
+  if(active){
+    if(S.metroMode==='compressions' && idx<3){
+      active.style.background='var(--red2)';
+    } else {
+      active.style.background='var(--green2)';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// MAIN TIMER
+// ═══════════════════════════════════════════════════════
+function fmt(s){
+  s=Math.abs(Math.floor(s));
+  const m=Math.floor(s/60);
+  return`${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+function fmtOverdue(s){return`+${fmt(s)}`;}
+
+setInterval(()=>{
+  if(!S.birthTime) return;
+  const el=Math.floor((Date.now()-S.birthTime)/1000);
+  document.getElementById('main-timer').textContent=fmt(el);
+  updateSpo2Highlight(el);
+},500);
+
+// ═══════════════════════════════════════════════════════
+// BOUTON ACCOUCHEMENT / NAISSANCE
+// ═══════════════════════════════════════════════════════
+function onBirthBtn(){
+  const btn=document.getElementById('birth-btn');
+  if(S.deliveryMode){
+    // Passage en mode "Naissance imminente" — pause et reset
+    S.deliveryMode=false;
+    btn.textContent='👶 Naissance';
+    btn.classList.remove('delivery');
+    // Métronome tourne déjà (démarré dans init)
+    // Le chrono ne tourne pas encore
+  } else {
+    // Naissance — démarrer chrono et cycle
+    S.birthTime=Date.now();
+    S.started=true;
+    btn.style.display='none';
+    document.getElementById('timer-sub').textContent='depuis la naissance';
+    logEvent('Naissance','event');
+    speak('Naissance. Démarrer les ventilations.');
+    startCycle();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CYCLE
+// ═══════════════════════════════════════════════════════
+function startCycle(){
+  S.cycleActive=true;
+  S.cycleStart=Date.now();
+  S.cycleOverdue=false;
+  document.getElementById('cycle-block').style.display='block';
+  document.getElementById('analysis-card').style.display='none';
+  document.getElementById('cycle-phase').textContent=
+    S.metroMode==='compressions'?'COMPRESSIONS EN COURS':'VENTILATIONS EN COURS';
+  if(S.cycleInterval) clearInterval(S.cycleInterval);
+  S.cycleInterval=setInterval(updateCycle,500);
+  updateCycle();
+}
+
+function updateCycle(){
+  if(!S.cycleActive) return;
+  const el=(Date.now()-S.cycleStart)/1000;
+  const rem=S.CYCLE_S-el;
+  const pct=Math.min(100,(el/S.CYCLE_S)*100);
+  const timeEl=document.getElementById('cycle-time');
+  const subEl=document.getElementById('cycle-sub');
+
+  if(rem>0){
+    timeEl.textContent=fmt(rem);
+    timeEl.className='';
+    subEl.textContent='jusqu\'à la prochaine évaluation';
+    subEl.className='';
+    subEl.style.color='var(--blue)';
+    document.getElementById('cbar').style.width=pct+'%';
+    document.getElementById('cbar').style.background='var(--blue2)';
+    if(rem<=5 && !S.preAlertFired){
+      S.preAlertFired=true;
+      sndAlert();
+      speak('Évaluation imminente.');
+    }
+  } else {
+    if(!S.cycleOverdue){
+      S.cycleOverdue=true;
+      S.cycleOverdueStart=Date.now();
+      S.analysisCount++;
+      fireAnalysis();
+    }
+    const overdue=(Date.now()-S.cycleOverdueStart)/1000;
+    timeEl.textContent=fmtOverdue(overdue);
+    timeEl.className='overdue';
+    subEl.textContent='⚠ ÉVALUATION EN RETARD';
+    subEl.className='overdue';
+    subEl.style.color='';
+    document.getElementById('cbar').style.width='100%';
+    document.getElementById('cbar').style.background='var(--red2)';
+  }
+}
+
+function fireAnalysis(){
+  sndAnalysis();
+  speak('Évaluation. Ausculter le cœur.');
+  showBanner('analysis','🔍 ÉVALUATION — Ausculter le cœur');
+  document.getElementById('analysis-card').style.display='block';
+  buildHRBtns();
+  buildSpo2();
+  setTimeout(()=>hideBanner(),6000);
+  document.getElementById('main').scrollTo({top:0,behavior:'smooth'});
+}
+
+function showBanner(type,msg){
+  const b=document.getElementById('alert-bar');
+  b.className='show '+type;b.textContent=msg;
+}
+function hideBanner(){document.getElementById('alert-bar').className='';}
+
+// ═══════════════════════════════════════════════════════
+// TAP HR
+// ═══════════════════════════════════════════════════════
+let tapTimeout=null;
+function tapHR(){
+  const now=Date.now();
+  tapTimes.push(now);
+  // Garder seulement les 8 derniers taps
+  if(tapTimes.length>8) tapTimes.shift();
+  // Reset si pause > 3s
+  if(tapTimeout) clearTimeout(tapTimeout);
+  tapTimeout=setTimeout(()=>{ tapTimes=[]; document.getElementById('tap-result').textContent='—'; },3000);
+
+  if(tapTimes.length>=2){
+    const intervals=[];
+    for(let i=1;i<tapTimes.length;i++) intervals.push(tapTimes[i]-tapTimes[i-1]);
+    const avg=intervals.reduce((a,b)=>a+b,0)/intervals.length;
+    const bpm=Math.round(60000/avg);
+    document.getElementById('tap-result').textContent=bpm;
+    // Afficher les boutons HR si pas encore visibles
+    document.getElementById('hr-btns').style.display='flex';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// BOUTONS HR selon guidelines
+// ═══════════════════════════════════════════════════════
+function buildHRBtns(){
+  const container=document.getElementById('hr-btns');
+  container.style.display='flex';
+  container.innerHTML='';
+
+  if(S.guidelines==='CORFA'){
+    container.innerHTML=`
+      <button class="hr-btn high" onclick="selectHR('high')">
+        > 100<br><span style="font-size:11px">/min</span>
+      </button>
+      <button class="hr-btn mid" onclick="selectHR('mid')">
+        60–100<br><span style="font-size:11px">/min</span>
+      </button>
+      <button class="hr-btn low" onclick="selectHR('low')">
+        < 60<br><span style="font-size:11px">/min</span>
+      </button>`;
+  } else {
+    // AHA et ERC : deux boutons
+    container.innerHTML=`
+      <button class="hr-btn high" onclick="selectHR('high')">
+        ≥ 60<br><span style="font-size:11px">/min</span>
+      </button>
+      <button class="hr-btn low" onclick="selectHR('low')">
+        < 60<br><span style="font-size:11px">/min</span>
+      </button>`;
+  }
+}
+
+function selectHR(result){
+  // Marquer le bouton sélectionné
+  document.querySelectorAll('.hr-btn').forEach(b=>b.classList.add('sel'));
+  event.target.closest('.hr-btn').classList.remove('sel');
+
+  const prev=S.lastHRResult;
+  S.lastHRResult=result;
+
+  logEvent('FC: '+hrLabel(result),'event');
+
+  if(result==='high'){
+    handleHRHigh();
+  } else if(result==='mid'){
+    handleHRMid();
+  } else {
+    handleHRLow(prev);
+  }
+}
+
+function hrLabel(r){
+  if(S.guidelines==='CORFA'){
+    if(r==='high') return '>100 /min';
+    if(r==='mid') return '60-100 /min';
+    return '<60 /min';
+  }
+  return r==='high'?'≥60 /min':'<60 /min';
+}
+
+function handleHRHigh(){
+  speak('Bonne fréquence cardiaque. Évaluer la respiration spontanée.');
+  showBanner('pre','✓ FC > seuil — Évaluer la respiration spontanée');
+  // Continuer ventilations
+  switchToVent();
+  startCycle();
+}
+
+function handleHRMid(){
+  // CORFA uniquement : 60-100
+  speak('Ventilation cent pour cent oxygène.');
+  showBanner('pre','💨 FC 60-100 — Ventilation FiO₂ 100%');
+  switchToVent();
+  startCycle();
+}
+
+function handleHRLow(prevResult){
+  speak('Fréquence cardiaque basse. Démarrer les compressions thoraciques.');
+  showBanner('compressions','⚠ FC < seuil — Compressions thoraciques 3:1');
+  switchToCompressions();
+  startCycle();
+
+  // Deux analyses consécutives à <60 → proposer ALS
+  if(prevResult==='low'){
+    setTimeout(()=>{
+      document.getElementById('als-block').classList.add('show');
+      renderAlsDrugs();
+      document.getElementById('main').scrollTo({top:999,behavior:'smooth'});
+    },1500);
+  }
+}
+
+function switchToVent(){
+  S.metroMode='vent';
+  setMetroBPM(guidelineVentBPM());
+  // Reset couleur beats
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('b'+i);
+    if(d) d.style.background='';
+  }
+}
+
+function switchToCompressions(){
+  S.metroMode='compressions';
+  setMetroBPM(120); // 120/min avec ratio 3:1 = 90 compressions + 30 ventilations
+}
+
+function guidelineVentBPM(){
+  if(S.guidelines==='CORFA') return 50;
+  if(S.guidelines==='AHA') return 45;
+  return 40; // ERC — ~5 insufflations / 30s soit rythme libre, on met 40
+}
+
+// ═══════════════════════════════════════════════════════
+// SPO2
+// ═══════════════════════════════════════════════════════
+const SPO2_TARGETS={
+  CORFA:[
+    {min:3,label:'3 min',range:'70%'},
+    {min:5,label:'5 min',range:'80%'},
+    {min:10,label:'10 min',range:'> 90%'},
+    {min:11,label:'> 10 min',range:'> 92%'},
+  ],
+  AHA:[
+    {min:2,label:'2 min',range:'65–70%'},
+    {min:3,label:'3 min',range:'70–75%'},
+    {min:4,label:'4 min',range:'75–80%'},
+    {min:5,label:'5 min',range:'80–85%'},
+    {min:10,label:'10 min',range:'85–95%'},
+  ],
+  ERC:[
+    {min:3,label:'3 min',range:'70–75%'},
+    {min:5,label:'5 min',range:'80–85%'},
+    {min:10,label:'10 min',range:'85–95%'},
+  ],
+};
+
+function buildSpo2(){
+  const targets=SPO2_TARGETS[S.guidelines]||SPO2_TARGETS.ERC;
+  const container=document.getElementById('spo2-rows');
+  container.innerHTML=targets.map(t=>`
+    <div class="spo2-row" id="spo2-${t.min}">
+      <span class="spo2-time">${t.label}</span>
+      <span class="spo2-val">${t.range}</span>
+    </div>
+  `).join('');
+  // Mettre à jour le highlight immédiatement
+  if(S.birthTime){
+    updateSpo2Highlight(Math.floor((Date.now()-S.birthTime)/1000));
+  }
+}
+
+function updateSpo2Highlight(elapsedSec){
+  const targets=SPO2_TARGETS[S.guidelines]||SPO2_TARGETS.ERC;
+  const elMin=elapsedSec/60;
+  // Trouver la cible courante = la dernière dont le temps est dépassé
+  let current=null;
+  for(const t of targets){
+    if(elMin>=t.min) current=t;
+  }
+  targets.forEach(t=>{
+    const row=document.getElementById('spo2-'+t.min);
+    if(!row) return;
+    if(current && t.min===current.min){
+      row.className='spo2-row current';
+    } else {
+      row.className='spo2-row';
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// ALS NÉONAT
+// ═══════════════════════════════════════════════════════
+const ALS_DRUGS={
+  CORFA:[
+    {id:'adr',name:'Adrénaline',dose:'10–30 µg/kg',min:10,max:30,unit:'µg',interval:180,intervalLabel:'3–5 min'},
+    {id:'nacl',name:'NaCl 0.9%',dose:'10 ml/kg',fixed:true,unit:'ml/kg'},
+    {id:'glucose',name:'Hypoglycémie',dose:'Traiter si besoin',fixed:true,noBtn:true},
+  ],
+  AHA:[
+    {id:'adr',name:'Adrénaline',dose:'10–30 µg/kg',min:10,max:30,unit:'µg',interval:60,intervalLabel:'1 min'},
+    {id:'nacl',name:'NaCl 0.9%',dose:'10 ml/kg',fixed:true,unit:'ml/kg'},
+    {id:'glucose',name:'Glucose',dose:'200 mg/kg',dosePerKg:200,unit:'mg'},
+  ],
+  ERC:[
+    {id:'adr',name:'Adrénaline',dose:'10–30 µg/kg',min:10,max:30,unit:'µg',interval:60,intervalLabel:'1 min'},
+    {id:'nacl',name:'NaCl 0.9%',dose:'10 ml/kg',fixed:true,unit:'ml/kg'},
+    {id:'glucose',name:'Glucose',dose:'200 mg/kg',dosePerKg:200,unit:'mg'},
+  ],
+};
+
+const alsGiven={};
+const alsTimers={};
+
+function adjAlsWeight(delta){
+  const step=delta>0?0.5:0.1;
+  S.alsWeight=Math.round(Math.max(0.3,Math.min(5,S.alsWeight+(delta>0?step:-step)))*10)/10;
+  document.getElementById('als-weight').textContent=S.alsWeight.toFixed(1);
+  renderAlsDrugs();
+}
+
+function adjMedWeight(delta){
+  const step=delta>0?0.5:0.1;
+  S.medWeight=Math.round(Math.max(0.3,Math.min(5,S.medWeight+(delta>0?step:-step)))*10)/10;
+  document.getElementById('med-weight').textContent=S.medWeight.toFixed(1);
+  renderMedDrugs();
+}
+
+function renderDrugs(containerId, weight, context){
+  // context = 'als' ou 'med'
+  const drugs=ALS_DRUGS[S.guidelines]||ALS_DRUGS.ERC;
+  const container=document.getElementById(containerId);
+  if(!container) return;
+
+  container.innerHTML=drugs.map(drug=>{
+    let doseText='';
+    let calcText='';
+
+    if(drug.noBtn){
+      return `<div class="drug-row-neo">
+        <div class="drug-name-neo">${drug.name}</div>
+        <div class="drug-dose-neo">${drug.dose}</div>
+      </div>`;
+    }
+
+    if(drug.fixed && drug.unit==='ml/kg'){
+      const vol=Math.round(weight*10);
+      doseText=drug.dose;
+      calcText=`${vol} ml`;
+    } else if(drug.dosePerKg){
+      const dose=Math.round(weight*drug.dosePerKg);
+      doseText=drug.dose;
+      calcText=`${dose} ${drug.unit}`;
+    } else if(drug.min && drug.max){
+      const dmin=Math.round(weight*drug.min);
+      const dmax=Math.round(weight*drug.max);
+      const dmed=Math.round(weight*(drug.min+drug.max)/2);
+      doseText=drug.dose;
+      calcText=`${dmed} ${drug.unit}  (${dmin}–${dmax} ${drug.unit})`;
+    }
+
+    const timerId=context+'-'+drug.id+'-cd';
+    const btnId=context+'-'+drug.id+'-btn';
+
+    return `<div class="drug-row-neo" id="${context}-row-${drug.id}">
+      <div class="drug-name-neo" style="color:var(--orange2)">${drug.name}</div>
+      <div class="drug-dose-neo">${doseText}</div>
+      <div class="drug-calc-neo">${calcText}</div>
+      <button class="drug-btn-neo" id="${btnId}"
+        onclick="giveDrugNeo('${drug.id}','${context}','${calcText}',${drug.interval||0})">
+        Administrer
+      </button>
+      <div class="drug-cd-neo" id="${timerId}"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderAlsDrugs(){ renderDrugs('als-drugs', S.alsWeight, 'als'); }
+function renderMedDrugs(){ renderDrugs('med-drugs', S.medWeight, 'med'); }
+
+function giveDrugNeo(drugId, context, doseText, intervalSec){
+  logEvent(drugId==='nacl'?`NaCl 0.9% ${doseText}`:drugId==='glucose'?`Glucose ${doseText}`:`Adrénaline ${doseText}`,'drug');
+  speak(drugId==='adr'?'Adrénaline administrée.':drugId==='nacl'?'NaCl administré.':'Glucose administré.');
+
+  if(intervalSec>0){
+    const btnId=context+'-'+drugId+'-btn';
+    const cdId=context+'-'+drugId+'-cd';
+    document.getElementById(btnId).disabled=true;
+    // Démarrer le compte à rebours
+    const start=Date.now();
+    let overdue=false;
+    if(alsTimers[drugId]) clearInterval(alsTimers[drugId]);
+    alsTimers[drugId]=setInterval(()=>{
+      const el=(Date.now()-start)/1000;
+      const rem=intervalSec-el;
+      const cdEl=document.getElementById(cdId);
+      const btnEl=document.getElementById(btnId);
+      if(!cdEl) return;
+      if(rem>0){
+        cdEl.textContent='Prochain: '+fmt(rem);
+        cdEl.style.color='var(--text3)';
+      } else {
+        if(!overdue){
+          overdue=true;
+          if(btnEl) btnEl.disabled=false;
+          speak('Adrénaline prête à administrer.');
+        }
+        cdEl.textContent='⚠ En retard: '+fmtOverdue(Math.abs(rem));
+        cdEl.style.color='var(--red2)';
+      }
+    },500);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// GUIDELINES
+// ═══════════════════════════════════════════════════════
+function setGuidelines(g){
+  S.guidelines=g;
+  savePrefs();
+
+  ['CORFA','AHA','ERC'].forEach(gl=>{
+    const btn=document.getElementById('btn-'+gl.toLowerCase());
+    if(!btn) return;
+    const active=gl===g;
+    const colors={CORFA:'orange',AHA:'red',ERC:'blue'};
+    const c=colors[gl];
+    btn.style.border=active?`2px solid var(--${c})`:`1px solid var(--border)`;
+    btn.style.background=active?`var(--${c}-bg)`:`var(--bg3)`;
+    btn.style.color=active?`var(--${c}2)`:`var(--text2)`;
+  });
+
+  const descs={
+    CORFA:'CORFA — 3 seuils FC : >100 / 60-100 / <60 /min · Ventilations 50/min',
+    AHA:'AHA — 2 seuils FC : ≥60 / <60 /min · Ventilations 45/min',
+    ERC:'ERC — 2 seuils FC : ≥60 / <60 /min · Ventilations 40/min',
+  };
+  document.getElementById('guidelines-desc').textContent=descs[g]||'';
+
+  // Mettre à jour le BPM du métronome si en mode vent
+  if(S.metroMode==='vent') setMetroBPM(guidelineVentBPM());
+
+  buildSpo2();
+  renderAlsDrugs();
+  renderMedDrugs();
+}
+
+// ═══════════════════════════════════════════════════════
+// LOGS
+// ═══════════════════════════════════════════════════════
+function logEvent(label,type){
+  const el=S.birthTime?Math.floor((Date.now()-S.birthTime)/1000):0;
+  const now=new Date();
+  const hms=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  S.logs.push({el,hms,label,type});
+  renderLogs();
+}
+function renderLogs(){
+  const list=document.getElementById('logs-list');
+  if(!S.logs.length){list.innerHTML='<div style="color:var(--text3);font-size:13px">Aucun événement</div>';return;}
+  list.innerHTML=S.logs.slice().reverse().map(l=>
+    `<div class="lentry">
+      <div class="lt">${fmt(l.el)}</div>
+      <div class="lev">${l.hms} — ${l.label}</div>
+      <div class="ltag ${l.type}">${l.type.toUpperCase()}</div>
+    </div>`
+  ).join('');
+}
+function showStop(){
+  const dur=S.birthTime?Math.floor((Date.now()-S.birthTime)/1000):0;
+  const lines=['CPR Assist Néonat — Rapport','Durée : '+fmt(dur),'','─── Journal ───'];
+  S.logs.forEach(l=>lines.push(`${l.hms}  [${fmt(l.el)}]  ${l.label}`));
+  document.getElementById('logs-export').textContent=lines.join('\n');
+  document.getElementById('stop-ov').classList.add('show');
+}
+function closeStop(){document.getElementById('stop-ov').classList.remove('show');}
+function copyLogs(){
+  const t=document.getElementById('logs-export').textContent;
+  navigator.clipboard.writeText(t).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');document.body.removeChild(a);});
+  document.getElementById('copy-btn').textContent='✅ Copié';
+  setTimeout(()=>document.getElementById('copy-btn').textContent='📋 Copier',2000);
+}
+function downloadLogs(){
+  const text=document.getElementById('logs-export').textContent;
+  const now=new Date();
+  const stamp=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  const blob=new Blob([text],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`RCP_Neonat_${stamp}.txt`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ═══════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════
+function showTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ═══════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════
+function savePrefs(){
+  localStorage.setItem('cpr-neo-prefs',JSON.stringify({
+    guidelines:S.guidelines,
+    speechOn:S.speechOn,
+    lightTheme:S.lightTheme,
+    themeManual:S._themeManual,
+  }));
+}
+function loadPrefs(){
+  try{
+    const p=JSON.parse(localStorage.getItem('cpr-neo-prefs')||'{}');
+    if(p.guidelines) S.guidelines=p.guidelines;
+    if(p.speechOn) S.speechOn=p.speechOn;
+    if(p.themeManual && p.lightTheme!==undefined){
+      S.lightTheme=p.lightTheme; S._themeManual=true;
+    }
+  }catch(_){}
+}
+function toggleSound(){
+  S.soundOn=!S.soundOn;
+  const b=document.getElementById('sound-btn');
+  b.textContent=S.soundOn?'🔊':'🔇';
+  b.classList.toggle('muted',!S.soundOn);
+  if(S.soundOn) getAC().resume();
+}
+function toggleSpeech(){
+  S.speechOn=!S.speechOn;
+  document.getElementById('speech-btn').classList.toggle('speech-on',S.speechOn);
+  document.getElementById('sw-speech').classList.toggle('on',S.speechOn);
+  document.getElementById('speech-desc').textContent=S.speechOn?'Activée':'Désactivée';
+}
+function toggleTheme(){
+  S.lightTheme=!S.lightTheme; S._themeManual=true;
+  document.documentElement.setAttribute('data-theme',S.lightTheme?'light':'');
+  document.getElementById('sw-theme').classList.toggle('on',S.lightTheme);
+  document.getElementById('theme-desc').textContent=S.lightTheme?'Clair':'Sombre';
+  savePrefs();
+}
+
+// Wake Lock
+async function requestWakeLock(){
+  if(!('wakeLock' in navigator)){
+    document.getElementById('wl-desc').textContent='Non supporté';return;
+  }
+  try{
+    S.wakeLock=await navigator.wakeLock.request('screen');
+    document.getElementById('wl-desc').textContent='Actif ✓';
+    S.wakeLock.addEventListener('release',async()=>{
+      if(document.visibilityState==='visible') await requestWakeLock();
+    });
+  }catch(e){
+    document.getElementById('wl-desc').textContent='Refusé: '+e.message;
+  }
+}
+document.addEventListener('visibilitychange',async()=>{
+  if(document.visibilityState==='visible') await requestWakeLock();
+});
+
+// Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(()=>{
+    document.getElementById('sw-desc').textContent='Hors ligne activé ✓';
+  }).catch(()=>{
+    document.getElementById('sw-desc').textContent='Erreur';
+  });
+}
+
+// System theme
+if(window.matchMedia){
+  const mq=window.matchMedia('(prefers-color-scheme: light)');
+  if(mq.matches&&!S._themeManual){
+    S.lightTheme=true;
+    document.documentElement.setAttribute('data-theme','light');
+    document.getElementById('sw-theme').classList.add('on');
+    document.getElementById('theme-desc').textContent='Clair';
+  }
+  mq.addEventListener('change',e=>{
+    if(!S._themeManual){
+      S.lightTheme=e.matches;
+      document.documentElement.setAttribute('data-theme',e.matches?'light':'');
+      document.getElementById('sw-theme').classList.toggle('on',e.matches);
+      document.getElementById('theme-desc').textContent=e.matches?'Clair':'Sombre';
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function init(){
+  loadPrefs();
+  initMetro4();
+  // Démarrer le métronome immédiatement pour les ventilations
+  setMetroBPM(guidelineVentBPM());
+  startMetro();
+  setGuidelines(S.guidelines);
+  // Appliquer prefs DOM
+  if(S.lightTheme&&S._themeManual){
+    document.documentElement.setAttribute('data-theme','light');
+    document.getElementById('sw-theme').classList.add('on');
+    document.getElementById('theme-desc').textContent='Clair';
+  }
+  if(S.speechOn){
+    document.getElementById('speech-btn').classList.add('speech-on');
+    document.getElementById('sw-speech').classList.add('on');
+    document.getElementById('speech-desc').textContent='Activée';
+  }
+  requestWakeLock();
+  logEvent('Préparation néonat démarrée','event');
+}
+init();
+</script>
+</body>
+</html>

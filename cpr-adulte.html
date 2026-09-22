@@ -250,6 +250,13 @@ input[type=range].lido-slider {
         <div id="metro-num">1</div>
         <div id="metro-lbl">/ 30</div>
       </div>
+      <button id="vent-mode-btn" onclick="cycleVentMode()"
+        style="height:38px;padding:0 10px;border-radius:19px;
+              background:var(--bg3);border:1px solid var(--border);
+              color:var(--text2);font-size:12px;font-weight:700;
+              cursor:pointer;white-space:nowrap;flex-shrink:0">
+        💨 Off
+      </button>
       <button class="ibtn" id="speech-btn" onclick="toggleSpeech()" title="Synthèse vocale">🗣</button>
       <button class="ibtn" id="sound-btn" onclick="toggleSound()" title="Son">🔊</button>
     </div>
@@ -625,21 +632,6 @@ input[type=range].lido-slider {
     </div>
   </div>
 
-  <!-- ── TAB VENTILATION ── -->
-  <div class="tab" id="tab-vent">
-    <div class="card">
-      <div class="ctitle">Ventilation</div>
-      <div class="trow">
-        <div><div class="tname">Mode 30 : 2</div><div class="tdesc">30 compressions / 2 ventilations</div></div>
-        <div class="tsw" id="sw-302" onclick="toggleVent('302')"></div>
-      </div>
-      <div class="trow">
-        <div><div class="tname">Ventilation continue</div><div class="tdesc">10/min ·  Toutes les 6 secondes</div></div>
-        <div class="tsw" id="sw-cont" onclick="toggleVent('cont')"></div>
-      </div>
-    </div>
-  </div>
-
   <!-- ── TAB LOGS ── -->
   <div class="tab" id="tab-logs">
     <div class="card">
@@ -848,7 +840,23 @@ input[type=range].lido-slider {
       <div class="ctitle">Visuel et paramètres de démarrage</div>
       <div class="prow"><div><div class="pname">Thème</div><div class="pdesc" id="theme-desc">Sombre (suit le système)</div></div><div class="tsw" id="sw-theme" onclick="toggleTheme()"></div></div>
       <div class="prow"><div><div class="pname">Synthèse vocale</div><div class="pdesc" id="speech-desc">Désactivée</div></div><div class="tsw" id="sw-speech" onclick="toggleSpeech()"></div></div>
-      <div class="prow"><div><div class="pname">Mode 30:2 au démarrage</div><div class="pdesc">Activer 30:2 dès le lancement</div></div><div class="tsw" id="sw-302-def" onclick="toggleDefault302()"></div></div>
+      <div class="prow">
+        <div>
+          <div class="pname">Mode de ventilation par défaut au démarrage</div>
+          <div class="pdesc">Active le métronome 30:2 ou continu dès le lancement</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button id="def-vent-off" onclick="setDefaultVent('off')"
+            style="padding:5px 10px;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;
+                  border:2px solid var(--border);background:var(--bg3);color:var(--text2)">Off</button>
+          <button id="def-vent-302" onclick="setDefaultVent('302')"
+            style="padding:5px 10px;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;
+                  border:1px solid var(--border);background:var(--bg3);color:var(--text2)">30:2</button>
+          <button id="def-vent-cont" onclick="setDefaultVent('cont')"
+            style="padding:5px 10px;border-radius:var(--r);font-size:12px;font-weight:700;cursor:pointer;
+                  border:1px solid var(--border);background:var(--bg3);color:var(--text2)">Cont.</button>
+        </div>
+      </div>
     </div>
     
     <div class="card">
@@ -919,7 +927,8 @@ const S={
   metroPaused:false, // 30:2 vent pause flag
   ventPauseUntil:0,  // AC time when pause ends
 
-  vent302:false, ventCont:false, ventContInterval:null,
+  vent302: false, ventCont: false, ventContInterval: null,
+  ventMode: 'off', // 'off' | '302' | 'cont'
 
   currentRhythm:null, isShockable:false,
   shockCount:0,
@@ -2049,24 +2058,47 @@ function adjEnergyInput(id, delta){
 // ══════════════════════════════════════════════════════════
 // VENTILATION
 // ══════════════════════════════════════════════════════════
-function toggleVent(mode){
-  if(mode==='302'){
-    S.vent302=!S.vent302; S.ventCont=false;
-    if(S.ventContInterval){clearInterval(S.ventContInterval);S.ventContInterval=null;}
-    document.getElementById('sw-302').classList.toggle('on',S.vent302);
-    document.getElementById('sw-cont').classList.remove('on');
-  } else {
-    S.ventCont=!S.ventCont; S.vent302=false;
-    document.getElementById('sw-cont').classList.toggle('on',S.ventCont);
-    document.getElementById('sw-302').classList.remove('on');
-    if(S.ventCont){
-      const t=getAC().currentTime;
-      scheduleVent(t);
-      S.ventContInterval=setInterval(()=>scheduleVent(getAC().currentTime+0.01),6000);
-    } else {
-      if(S.ventContInterval){clearInterval(S.ventContInterval);S.ventContInterval=null;}
-    }
+function cycleVentMode(){
+  // Off → 30:2 → Cont → Off
+  if(S.ventMode==='off')       setVentMode('302');
+  else if(S.ventMode==='302')  setVentMode('cont');
+  else                         setVentMode('off');
+}
+
+function setVentMode(mode){
+  S.ventMode=mode;
+  S.vent302=mode==='302';
+  S.ventCont=mode==='cont';
+
+  // Arrêter l'intervalle continu si actif
+  if(S.ventContInterval){ clearInterval(S.ventContInterval); S.ventContInterval=null; }
+
+  // Démarrer l'intervalle continu si nécessaire
+  if(mode==='cont'){
+    scheduleVent(getAC().currentTime+0.01);
+    S.ventContInterval=setInterval(()=>scheduleVent(getAC().currentTime+0.01),6000);
   }
+
+  // Mettre à jour le bouton
+  const btn=document.getElementById('vent-mode-btn');
+  if(mode==='off'){
+    btn.textContent='💨 Off';
+    btn.style.border='1px solid var(--border)';
+    btn.style.color='var(--text2)';
+    btn.style.background='var(--bg3)';
+  } else if(mode==='302'){
+    btn.textContent='💨 30:2';
+    btn.style.border='2px solid var(--green)';
+    btn.style.color='var(--green2)';
+    btn.style.background='var(--green-bg)';
+  } else {
+    btn.textContent='💨 Cont.';
+    btn.style.border='2px solid var(--blue)';
+    btn.style.color='var(--blue2)';
+    btn.style.background='var(--blue-bg)';
+  }
+
+  savePrefs();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -2213,12 +2245,18 @@ function toggleTheme(){
   document.getElementById('theme-desc').textContent=S.lightTheme?'Clair':'Sombre';
   savePrefs();
 }
-function toggleDefault302(){
-  S.default302=!S.default302;
-  document.getElementById('sw-302-def').classList.toggle('on',S.default302);
-  S.vent302=S.default302;
-  document.getElementById('sw-302').classList.toggle('on',S.vent302);
-  savePrefs();
+function setDefaultVent(mode){
+  S.ventMode=mode;
+  setVentMode(mode);
+  // Mettre à jour les boutons params
+  ['off','302','cont'].forEach(m=>{
+    const b=document.getElementById('def-vent-'+m);
+    if(!b) return;
+    const active=m===mode;
+    b.style.border=active?'2px solid var(--green)':'1px solid var(--border)';
+    b.style.background=active?'var(--green-bg)':'var(--bg3)';
+    b.style.color=active?'var(--green2)':'var(--text2)';
+  });
 }
 function setVolume(type, val){
   const v=parseInt(val)/5;
@@ -2359,7 +2397,7 @@ function getAC(){
 // ══════════════════════════════════════════════════════════
 function savePrefs(){
   localStorage.setItem('cpr-prefs', JSON.stringify({
-    vent302: S.default302,
+    ventMode: S.ventMode,
     speechOn: S.speechOn,
     lightTheme: S.lightTheme,
     themeManual: S._themeManual,
@@ -2377,7 +2415,7 @@ function savePrefs(){
 function loadPrefs(){
   try{
     const p=JSON.parse(localStorage.getItem('cpr-prefs')||'{}');
-    if(p.vent302){ S.default302=true; S.vent302=true; }
+    if(p.ventMode) S.ventMode=p.ventMode;
     if(p.speechOn){ S.speechOn=true; }
     if(p.themeManual && p.lightTheme!==undefined){
       S.lightTheme=p.lightTheme; S._themeManual=true;
@@ -2432,10 +2470,8 @@ function init(){
     document.getElementById('sw-speech').classList.add('on');
     document.getElementById('speech-desc').textContent='Activée';
   }
-  if(S.vent302){
-    document.getElementById('sw-302').classList.add('on');
-    document.getElementById('sw-302-def').classList.add('on');
-  }
+  setVentMode(S.ventMode||'off');
+  setDefaultVent(S.ventMode||'off');
   //Sons
   document.getElementById('vol-metro').value=Math.round(S.volumeMetro*5);
   document.getElementById('vol-metro-disp').textContent=Math.round(S.volumeMetro*5);

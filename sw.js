@@ -1,4 +1,4 @@
-const CACHE = 'cpr-assist-v1.2';
+const CACHE = 'cpr-assist-v1.3';
 const FILES = [
   './index.html',
   './cpr-adult.html',

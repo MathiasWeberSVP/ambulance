@@ -1,5 +1,10 @@
 const CACHE = 'cpr-assist-v1.2';
-const FILES = ['./cpr-adult.html', './manifest.json'];
+const FILES = [
+  './index.html',
+  './cpr-adult.html',
+  './cpr-neonate.html',
+  './manifest.json'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));

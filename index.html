@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="manifest.json">
+<title>CPR Assist</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{
+  height:100%;background:#0a0a0a;color:#f0f0f0;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+  overflow:hidden;
+}
+.screen{
+  height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:24px;gap:20px;
+}
+.logo{font-size:48px;margin-bottom:8px;}
+h1{font-size:22px;font-weight:700;text-align:center;letter-spacing:-0.5px;}
+.subtitle{font-size:13px;color:#555;text-align:center;}
+.patient-btns{
+  display:flex;flex-direction:column;gap:14px;
+  width:100%;max-width:320px;margin-top:12px;
+}
+.patient-btn{
+  padding:22px 16px;border-radius:14px;border:2px solid;
+  cursor:pointer;display:flex;align-items:center;gap:16px;
+  transition:transform 0.1s;-webkit-user-select:none;user-select:none;
+}
+.patient-btn:active{transform:scale(0.97);}
+.patient-btn .icon{font-size:36px;flex-shrink:0;}
+.patient-btn .info{text-align:left;}
+.patient-btn .bname{font-size:17px;font-weight:700;}
+.patient-btn .bdesc{font-size:11px;margin-top:3px;opacity:0.7;}
+
+.btn-adult{
+  background:#2a1010;border-color:#e83535;color:#ff6b6b;
+}
+.btn-child{
+  background:#0a1828;border-color:#4da6ff;color:#88ccff;
+}
+.btn-neonate{
+  background:#0a2018;border-color:#35c97a;color:#66ffaa;
+}
+.footer{
+  font-size:10px;color:#333;text-align:center;
+  position:absolute;bottom:16px;
+}
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="logo">❤️</div>
+  <h1>CPR Assist</h1>
+  <div class="subtitle">Sélectionner le type de patient</div>
+
+  <div class="patient-btns">
+    <button class="patient-btn btn-adult" onclick="go('cpr-adult.html')">
+      <div class="icon">🧑</div>
+      <div class="info">
+        <div class="bname">Adulte</div>
+        <div class="bdesc">Adulte (>18 ans) ou enfants avec signes de puberté</div>
+      </div>
+    </button>
+
+    <button class="patient-btn btn-child" onclick="go('cpr-adult.html?patient=child')" style="opacity:0.4;cursor:not-allowed">
+      <div class="icon">🧒</div>
+      <div class="info">
+        <div class="bname">Enfant - Bientôt disponible</div>
+        <div class="bdesc">Enfant sans signes de puberté</div>
+      </div>
+    </button>
+
+    <button class="patient-btn btn-neonate" onclick="go('cpr-neonate.html')">
+      <div class="icon">👶</div>
+      <div class="info">
+        <div class="bname">Nouveau-né</div>
+        <div class="bdesc">Jusqu'à 28 jours</div>
+      </div>
+    </button>
+  </div>
+
+  <div class="footer">CPR Assist v1.0 — ©Mathias Weber</div>
+</div>
+
+<script>
+function go(url){
+  window.location.href=url;
+}
+
+// Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
   "name": "CPR Assist",
   "short_name": "CPR Assist",
   "description": "Aide au timing lors des réanimations cardio-pulmonaires",
-  "start_url": "./cpr-adult.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0a0a",

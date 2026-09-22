@@ -137,7 +137,7 @@ body.alert-visible #main {
 /* TAP HR */
 #tap-block{margin-top:12px;}
 #tap-btn{
-  width:100%;padding:16px;border-radius:var(--r);
+  width:100%;padding:35px;border-radius:var(--r);
   background:var(--bg3);border:1px solid var(--border);
   color:var(--text);font-size:14px;font-weight:600;cursor:pointer;
 }
@@ -755,7 +755,6 @@ function updateCycle(){
     if(rem<=5 && !S.preAlertFired){
       S.preAlertFired=true;
       sndAlert();
-      speak('Évaluation dans 5 secondes.');
     }
   } else {
     if(!S.cycleOverdue){

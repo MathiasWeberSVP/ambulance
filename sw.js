@@ -1,6 +1,6 @@
 const CACHE = 'cpr-assist-v1.3';
 const FILES = [
-  './index.html',
+  './cpr-tool.html',
   './cpr-adult.html',
   './cpr-neonate.html',
   './manifest.json'

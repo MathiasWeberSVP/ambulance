@@ -300,6 +300,12 @@ body.alert-visible #main {
       </div>
     </div>
 
+    <!-- SpO2 permanent -->
+    <div class="card" id="spo2-card">
+      <div class="ctitle">Cibles SpO₂</div>
+      <div id="spo2-rows-permanent"></div>
+    </div>
+
     <!-- ALS -->
     <div id="als-block">
       <div class="als-card">
@@ -969,35 +975,36 @@ const SPO2_TARGETS={
 
 function buildSpo2(){
   const targets=SPO2_TARGETS[S.guidelines]||SPO2_TARGETS.ERC;
-  const container=document.getElementById('spo2-rows');
-  container.innerHTML=targets.map(t=>`
+  const html=targets.map(t=>`
     <div class="spo2-row" id="spo2-${t.min}">
       <span class="spo2-time">${t.label}</span>
       <span class="spo2-val">${t.range}</span>
     </div>
   `).join('');
-  // Mettre à jour le highlight immédiatement
-  if(S.birthTime){
-    updateSpo2Highlight(Math.floor((Date.now()-S.birthTime)/1000));
-  }
+
+  // Dans le bloc analyse
+  const c1=document.getElementById('spo2-rows');
+  if(c1) c1.innerHTML=html;
+
+  // En continu sur la page séquence
+  const c2=document.getElementById('spo2-rows-permanent');
+  if(c2) c2.innerHTML=html.replace(/id="spo2-/g,'id="spo2p-');
+
+  if(S.birthTime) updateSpo2Highlight(Math.floor((Date.now()-S.birthTime)/1000));
 }
 
 function updateSpo2Highlight(elapsedSec){
   const targets=SPO2_TARGETS[S.guidelines]||SPO2_TARGETS.ERC;
   const elMin=elapsedSec/60;
-  // Trouver la cible courante = la dernière dont le temps est dépassé
   let current=null;
-  for(const t of targets){
-    if(elMin>=t.min) current=t;
-  }
+  for(const t of targets) if(elMin>=t.min) current=t;
+
   targets.forEach(t=>{
-    const row=document.getElementById('spo2-'+t.min);
-    if(!row) return;
-    if(current && t.min===current.min){
-      row.className='spo2-row current';
-    } else {
-      row.className='spo2-row';
-    }
+    ['spo2-','spo2p-'].forEach(prefix=>{
+      const row=document.getElementById(prefix+t.min);
+      if(!row) return;
+      row.className=current&&t.min===current.min?'spo2-row current':'spo2-row';
+    });
   });
 }
 

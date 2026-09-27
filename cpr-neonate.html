@@ -1222,7 +1222,6 @@ function manualOtherNeo(){
   const dose=document.getElementById('other-neo-dose').value.trim();
   if(!name) return;
   logEvent(name+(dose?' — '+dose:''),'drug');
-  speak(name+' administré.');
   document.getElementById('other-neo-name').value='';
   document.getElementById('other-neo-dose').value='';
 }

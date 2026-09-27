@@ -1047,15 +1047,13 @@ function onWeightInput(ctx, val){
 }
 
 function renderDrugs(containerId, weight, context){
-  // context = 'als' ou 'med'
   const drugs=ALS_DRUGS[S.guidelines]||ALS_DRUGS.ERC;
   const container=document.getElementById(containerId);
   if(!container) return;
 
   container.innerHTML=drugs.map(drug=>{
-    let doseText='';
-    let calcText='';
 
+    // Médicament sans bouton
     if(drug.noBtn){
       return `<div class="drug-row-neo">
         <div class="drug-name-neo">${drug.name}</div>
@@ -1063,46 +1061,51 @@ function renderDrugs(containerId, weight, context){
       </div>`;
     }
 
-    if(drug.min && drug.max){
-      const dmin=Math.round(weight*drug.min);
-      const dmax=Math.round(weight*drug.max);
-      const dmed=Math.round(weight*(drug.min+drug.max)/2);
-      const sliderId=context+'-'+drug.id+'-slider';
-      const calcId=context+'-'+drug.id+'-calcval';
-      doseText=drug.dose;
+    const btnId=`${context}-${drug.id}-btn`;
+    const cdId=`${context}-${drug.id}-cd`;
 
+    // Plage avec curseur (adrénaline ET NaCl AHA)
+    if((drug.min && drug.max) || drug.isVolume){
+      const dmin=Math.round(weight*(drug.min||10));
+      const dmax=Math.round(weight*(drug.max||20));
+      const dmed=Math.round((dmin+dmax)/2);
+      const sliderId=`${context}-${drug.id}-slider`;
+      const calcId=`${context}-${drug.id}-calcval`;
       return `<div class="drug-row-neo" id="${context}-row-${drug.id}">
         <div class="drug-name-neo" style="color:var(--orange2)">${drug.name}</div>
-        <div class="drug-dose-neo">${doseText}</div>
+        <div class="drug-dose-neo">${drug.dose}</div>
         <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
-          <span style="font-size:11px;color:var(--text3);min-width:32px">${dmin} ${drug.unit}</span>
+          <span style="font-size:11px;color:var(--text3);min-width:36px">${dmin} ${drug.unit}</span>
           <input type="range" id="${sliderId}" min="${dmin}" max="${dmax}" step="1" value="${dmed}"
             oninput="document.getElementById('${calcId}').textContent=this.value+' ${drug.unit}'"
             style="flex:1">
-          <span style="font-size:11px;color:var(--text3);min-width:32px;text-align:right">${dmax} ${drug.unit}</span>
+          <span style="font-size:11px;color:var(--text3);min-width:36px;text-align:right">${dmax} ${drug.unit}</span>
         </div>
         <div class="drug-calc-neo" id="${calcId}">${dmed} ${drug.unit}</div>
-        <button class="drug-btn-neo" id="${context+'-'+drug.id+'-btn'}"
+        <button class="drug-btn-neo" id="${btnId}"
           onclick="giveDrugNeoSlider('${drug.id}','${context}','${sliderId}','${drug.unit}',${drug.interval||0})">
           Administrer
         </button>
-        <div class="drug-cd-neo" id="${context+'-'+drug.id+'-cd'}"></div>
+        <div class="drug-cd-neo" id="${cdId}"></div>
       </div>`;
     }
 
-    const timerId=context+'-'+drug.id+'-cd';
-    const btnId=context+'-'+drug.id+'-btn';
+    // Dose fixe par kg (NaCl CORFA/ERC, Glucose)
+    if(drug.dosePerKg){
+      const dose=Math.round(weight*drug.dosePerKg);
+      return `<div class="drug-row-neo" id="${context}-row-${drug.id}">
+        <div class="drug-name-neo" style="color:var(--blue2)">${drug.name}</div>
+        <div class="drug-dose-neo">${drug.dose}</div>
+        <div class="drug-calc-neo">${dose} ${drug.unit}</div>
+        <button class="drug-btn-neo" id="${btnId}" style="background:var(--blue)"
+          onclick="giveDrugNeo('${drug.id}','${context}','${dose} ${drug.unit}',0)">
+          Administrer
+        </button>
+        <div class="drug-cd-neo" id="${cdId}"></div>
+      </div>`;
+    }
 
-    return `<div class="drug-row-neo" id="${context}-row-${drug.id}">
-      <div class="drug-name-neo" style="color:var(--orange2)">${drug.name}</div>
-      <div class="drug-dose-neo">${doseText}</div>
-      <div class="drug-calc-neo">${calcText}</div>
-      <button class="drug-btn-neo" id="${btnId}"
-        onclick="giveDrugNeo('${drug.id}','${context}','${calcText}',${drug.interval||0})">
-        Administrer
-      </button>
-      <div class="drug-cd-neo" id="${timerId}"></div>
-    </div>`;
+    return '';
   }).join('');
 }
 

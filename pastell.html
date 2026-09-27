@@ -333,16 +333,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       </div>
     </div>
 
-    <div class="card">
-      <div class="ctitle">Installation PWA</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.6">
-        <b>Android (Chrome)</b> : menu ⋮ → "Ajouter à l'écran d'accueil"<br>
-        <b>iOS (Safari)</b> : bouton Partager → "Sur l'écran d'accueil"<br><br>
-        <div style="color:var(--text3)">L'app fonctionnera hors ligne une fois les fichiers mis en cache.</div>
-      </div>
-      <button id="pwa-install-btn" style="display:none;width:100%;margin-top:10px;padding:11px;background:var(--green-bg);border:1px solid var(--green);border-radius:var(--r);color:var(--green2);font-size:14px;font-weight:700;cursor:pointer" onclick="installPWA()">📲 Installer l'application</button>
-    </div>
-
     <!-- Statut -->
     <div class="card">
       <div class="ctitle">Statut système</div>
@@ -994,17 +984,6 @@ if(window.matchMedia){
   const mq=window.matchMedia('(prefers-color-scheme: light)');
   if(mq.matches&&!S._themeManual){S.lightTheme=true;}
   mq.addEventListener('change',e=>{if(!S._themeManual){S.lightTheme=e.matches;applyTheme();}});
-}
-
-// ══════════════════════════════════════════════════════════
-// PWA INSTALL
-// ══════════════════════════════════════════════════════════
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault(); S.pwaPrompt=e;
-  document.getElementById('pwa-install-btn').style.display='block';
-});
-function installPWA(){
-  if(S.pwaPrompt){ S.pwaPrompt.prompt(); S.pwaPrompt.userChoice.then(()=>S.pwaPrompt=null); }
 }
 
 // ═══════════════════════════════════════════════════════

@@ -403,23 +403,23 @@ body.alert-visible #main {
       <div id="guidelines-desc" style="font-size:12px;color:var(--text2);margin-bottom:4px"></div>
     </div>
 
-   <div class="card">
-    <div class="ctitle">Versions des algorithmes</div>
-    <div style="font-size:12px;color:var(--text2);line-height:1.8">
-      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--orange2);font-weight:600">CORFA</span>
-        <span>Version 6.1</span>
+    <div class="card">
+      <div class="ctitle">Versions des algorithmes</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.8">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+          <span style="color:var(--orange2);font-weight:600">CORFA</span>
+          <span>Version 6.1</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+          <span style="color:var(--red2);font-weight:600">AHA</span>
+          <span>Guidelines 2025</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0">
+          <span style="color:var(--blue2);font-weight:600">ERC</span>
+          <span>Guidelines 2025</span>
+        </div>
       </div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--red2);font-weight:600">AHA</span>
-        <span>Guidelines 2025</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:4px 0">
-        <span style="color:var(--blue2);font-weight:600">ERC</span>
-        <span>Guidelines 2025</span>
-      </div>
-    </div>
-  </div> 
+    </div> 
 
     <div class="card">
       <div class="ctitle">Affichage</div>
@@ -431,6 +431,46 @@ body.alert-visible #main {
         <div><div class="pname">Synthèse vocale</div><div class="pdesc" id="speech-desc">Désactivée</div></div>
         <div class="tsw" id="sw-speech" onclick="toggleSpeech()"></div>
       </div>
+    </div>
+
+    <!-- Volume -->
+    <div class="card">
+      <div class="ctitle">Volume des sons</div>
+      <div class="prow">
+        <div><div class="pname">Ventilations</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="1" max="10" step="1" id="vol-vent"
+            oninput="setVolumeNeo('vent',this.value)" style="width:100px">
+          <span id="vol-vent-disp"
+            style="font-size:12px;font-weight:700;min-width:24px;text-align:right;color:var(--text2)">10</span>
+        </div>
+      </div>
+      <div class="prow">
+        <div><div class="pname">Alertes</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" min="1" max="10" step="1" id="vol-alert"
+            oninput="setVolumeNeo('alert',this.value)" style="width:100px">
+          <span id="vol-alert-disp"
+            style="font-size:12px;font-weight:700;min-width:24px;text-align:right;color:var(--text2)">10</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">
+        Volume système au maximum recommandé sur le terrain.
+      </div>
+    </div>
+
+    <!-- PWA -->
+    <div class="card">
+      <div class="ctitle">Installation PWA</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">
+        <b>Android (Chrome)</b> : menu ⋮ → "Ajouter à l'écran d'accueil"<br>
+        <b>iOS (Safari)</b> : bouton Partager → "Sur l'écran d'accueil"
+      </div>
+      <button id="pwa-install-btn"
+        style="display:none;width:100%;margin-top:10px;padding:11px;
+              background:var(--green-bg);border:1px solid var(--green);border-radius:var(--r);
+              color:var(--green2);font-size:14px;font-weight:700;cursor:pointer"
+        onclick="installPWA()">📲 Installer l'application</button>
     </div>
 
     <div class="card">
@@ -1286,6 +1326,8 @@ function savePrefs(){
     speechOn:S.speechOn,
     lightTheme:S.lightTheme,
     themeManual:S._themeManual,
+    volumeVent: S.volumeVent,
+    volumeAlert: S.volumeAlert,
   }));
 }
 function loadPrefs(){
@@ -1296,6 +1338,8 @@ function loadPrefs(){
     if(p.themeManual && p.lightTheme!==undefined){
       S.lightTheme=p.lightTheme; S._themeManual=true;
     }
+    if(p.volumeVent) S.volumeVent=p.volumeVent;
+    if(p.volumeAlert) S.volumeAlert=p.volumeAlert;
   }catch(_){}
 }
 function toggleSound(){
@@ -1316,6 +1360,18 @@ function toggleTheme(){
   document.documentElement.setAttribute('data-theme',S.lightTheme?'light':'');
   document.getElementById('sw-theme').classList.toggle('on',S.lightTheme);
   document.getElementById('theme-desc').textContent=S.lightTheme?'Clair':'Sombre';
+  savePrefs();
+}
+
+function setVolumeNeo(type, val){
+  const v=parseInt(val)/5; // 1→0.2, 10→2.0
+  if(type==='vent'){
+    S.volumeVent=v;
+    document.getElementById('vol-vent-disp').textContent=val;
+  } else {
+    S.volumeAlert=v;
+    document.getElementById('vol-alert-disp').textContent=val;
+  }
   savePrefs();
 }
 
@@ -1366,6 +1422,16 @@ if(window.matchMedia){
   });
 }
 
+// PWA install
+let pwaPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); pwaPrompt=e;
+  document.getElementById('pwa-install-btn').style.display='block';
+});
+function installPWA(){
+  if(pwaPrompt){ pwaPrompt.prompt(); pwaPrompt.userChoice.then(()=>pwaPrompt=null); }
+}
+
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
@@ -1387,6 +1453,11 @@ function init(){
     document.getElementById('sw-speech').classList.add('on');
     document.getElementById('speech-desc').textContent='Activée';
   }
+
+  document.getElementById('vol-vent').value=Math.round(S.volumeVent*5);
+  document.getElementById('vol-vent-disp').textContent=Math.round(S.volumeVent*5);
+  document.getElementById('vol-alert').value=Math.round(S.volumeAlert*5);
+  document.getElementById('vol-alert-disp').textContent=Math.round(S.volumeAlert*5);
 
   // Bouton accouchement visible 5s seulement
   birthBtnState='delivery';

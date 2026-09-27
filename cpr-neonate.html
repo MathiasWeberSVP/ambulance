@@ -193,6 +193,22 @@ body.alert-visible #main {
 }
 .drug-cd-neo{font-size:13px;color:var(--text3);margin-top:4px;font-variant-numeric:tabular-nums;}
 
+/* APGAR */
+.apgar-item{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.apgar-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.apgar-label{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px;}
+.apgar-opts{display:flex;gap:6px;}
+.apgar-opt{
+  flex:1;padding:8px 4px;border-radius:var(--r);
+  border:1px solid var(--border);background:var(--bg3);
+  color:var(--text2);font-size:12px;cursor:pointer;
+  text-align:center;line-height:1.3;transition:all .15s;
+}
+.apgar-opt:active{transform:scale(0.97);}
+.apgar-opt.sel0{border-color:var(--red);background:var(--red-bg);color:var(--red2);}
+.apgar-opt.sel1{border-color:var(--orange);background:var(--orange-bg);color:var(--orange2);}
+.apgar-opt.sel2{border-color:var(--green);background:var(--green-bg);color:var(--green2);}
+
 /* LOGS */
 .lbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px;}
 .lbtn{padding:11px 6px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;cursor:pointer;text-align:center;}
@@ -362,6 +378,43 @@ body.alert-visible #main {
     </div>
   </div>
 
+  <!-- TAB APGAR -->
+  <div class="tab" id="tab-apgar">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="ctitle" style="margin-bottom:0">Score APGAR</div>
+        <div id="apgar-score-display"
+          style="font-size:36px;font-weight:700;font-variant-numeric:tabular-nums;
+                color:var(--text);min-width:48px;text-align:right">
+          —
+        </div>
+      </div>
+
+      <div id="apgar-items"></div>
+
+      <div id="apgar-complete" style="display:none;margin-top:14px;padding:12px;
+        border-radius:var(--r);text-align:center;font-weight:700;font-size:15px">
+      </div>
+
+      <button onclick="logApgar()"
+        style="width:100%;margin-top:12px;padding:11px;
+              background:var(--bg3);border:1px solid var(--border);
+              border-radius:var(--r);color:var(--text2);font-size:13px;
+              font-weight:700;cursor:pointer"
+        id="apgar-log-btn">
+        📋 Enregistrer le score
+      </button>
+
+      <button onclick="resetApgar()"
+        style="width:100%;margin-top:8px;padding:9px;
+              background:none;border:none;
+              color:var(--text3);font-size:12px;cursor:pointer;
+              text-decoration:underline">
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+
   <!-- TAB LOGS -->
   <div class="tab" id="tab-logs">
     <div class="card">
@@ -495,6 +548,7 @@ body.alert-visible #main {
 <nav id="nav">
   <button class="nb on" onclick="showTab('seq',this)"><span class="ni">👶</span>Séquence</button>
   <button class="nb" onclick="showTab('meds',this)"><span class="ni">💊</span>Médic.</button>
+  <button class="nb" onclick="showTab('apgar',this)"><span class="ni">⭐</span>APGAR</button>
   <button class="nb" onclick="showTab('logs',this)"><span class="ni">📋</span>Logs</button>
   <button class="nb" onclick="showTab('params',this)"><span class="ni">⚙️</span>Params</button>
 </nav>
@@ -1260,6 +1314,165 @@ function setGuidelines(g){
 }
 
 // ═══════════════════════════════════════════════════════
+// APGAR
+// ═══════════════════════════════════════════════════════
+const APGAR_ITEMS=[
+  {
+    id:'appearance', label:'Apparence',
+    opts:[
+      {score:0, text:'Pâle / entièrement cyanosé'},
+      {score:1, text:'Tronc rosé / extrémités cyanosées'},
+      {score:2, text:'Entièrement rosé'},
+    ]
+  },
+  {
+    id:'pulse', label:'Pulsations',
+    opts:[
+      {score:0, text:'Absentes'},
+      {score:1, text:'< 100 /min'},
+      {score:2, text:'> 100 /min'},
+    ]
+  },
+  {
+    id:'grimace', label:'Grimace',
+    opts:[
+      {score:0, text:'Pas de réponse'},
+      {score:1, text:'Grimace / pleurs faibles'},
+      {score:2, text:'Cris vigoureux'},
+    ]
+  },
+  {
+    id:'activity', label:'Activité',
+    opts:[
+      {score:0, text:'Hypotonie / amorphe'},
+      {score:1, text:'Quelques mouvements'},
+      {score:2, text:'Mouvements actifs'},
+    ]
+  },
+  {
+    id:'respiration', label:'Respiration',
+    opts:[
+      {score:0, text:'Absente'},
+      {score:1, text:'Superficielle / irrégulière'},
+      {score:2, text:'Ample / régulière / pleurs'},
+    ]
+  },
+];
+
+const apgarScores={};
+
+function buildApgar(){
+  const container=document.getElementById('apgar-items');
+  container.innerHTML=APGAR_ITEMS.map(item=>`
+    <div class="apgar-item" id="apgar-item-${item.id}">
+      <div class="apgar-label">${item.label}</div>
+      <div class="apgar-opts">
+        ${item.opts.map(opt=>`
+          <button class="apgar-opt" id="apgar-${item.id}-${opt.score}"
+            onclick="selectApgar('${item.id}',${opt.score})">
+            ${opt.text}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectApgar(itemId, score){
+  apgarScores[itemId]=score;
+
+  // Mettre à jour les boutons de cet item
+  const item=APGAR_ITEMS.find(i=>i.id===itemId);
+  item.opts.forEach(opt=>{
+    const btn=document.getElementById(`apgar-${itemId}-${opt.score}`);
+    if(!btn) return;
+    btn.className='apgar-opt';
+    if(opt.score===score) btn.classList.add('sel'+score);
+  });
+
+  updateApgarScore();
+}
+
+function updateApgarScore(){
+  const filled=Object.keys(apgarScores).length;
+  const total=Object.values(apgarScores).reduce((a,b)=>a+b,0);
+
+  const display=document.getElementById('apgar-score-display');
+  const complete=document.getElementById('apgar-complete');
+
+  if(filled===0){
+    display.textContent='—';
+    display.style.color='var(--text)';
+    complete.style.display='none';
+    return;
+  }
+
+  display.textContent=total;
+
+  // Couleur du score selon valeur
+  if(total<=3){
+    display.style.color='var(--red2)';
+  } else if(total<=6){
+    display.style.color='var(--orange2)';
+  } else {
+    display.style.color='var(--green2)';
+  }
+
+  // Tous les items remplis
+  if(filled===APGAR_ITEMS.length){
+    complete.style.display='block';
+    if(total<=3){
+      complete.style.background='var(--red-bg)';
+      complete.style.border='1px solid var(--red)';
+      complete.style.color='var(--red2)';
+      complete.textContent='Score '+total+'/10 — Détresse sévère';
+    } else if(total<=6){
+      complete.style.background='var(--orange-bg)';
+      complete.style.border='1px solid var(--orange)';
+      complete.style.color='var(--orange2)';
+      complete.textContent='Score '+total+'/10 — Détresse modérée';
+    } else {
+      complete.style.background='var(--green-bg)';
+      complete.style.border='1px solid var(--green)';
+      complete.style.color='var(--green2)';
+      complete.textContent='Score '+total+'/10 — Bonne adaptation';
+    }
+  } else {
+    complete.style.display='none';
+  }
+}
+
+function logApgar(){
+  const filled=Object.keys(apgarScores).length;
+  const total=Object.values(apgarScores).reduce((a,b)=>a+b,0);
+  if(filled===0) return;
+
+  const details=APGAR_ITEMS
+    .filter(i=>apgarScores[i.id]!==undefined)
+    .map(i=>`${i.label}: ${apgarScores[i.id]}`)
+    .join(', ');
+
+  const scoreLabel=filled===APGAR_ITEMS.length
+    ? `APGAR ${total}/10`
+    : `APGAR partiel ${total}/${filled*2} (${filled}/5 items)`;
+
+  logEvent(`${scoreLabel} — ${details}`,'event');
+
+  // Feedback
+  const btn=document.getElementById('apgar-log-btn');
+  btn.textContent='✅ Enregistré';
+  setTimeout(()=>btn.textContent='📋 Enregistrer le score',2000);
+}
+
+function resetApgar(){
+  Object.keys(apgarScores).forEach(k=>delete apgarScores[k]);
+  buildApgar();
+  document.getElementById('apgar-score-display').textContent='—';
+  document.getElementById('apgar-score-display').style.color='var(--text)';
+  document.getElementById('apgar-complete').style.display='none';
+}
+
+// ═══════════════════════════════════════════════════════
 // LOGS
 // ═══════════════════════════════════════════════════════
 function logEvent(label,type){
@@ -1465,7 +1678,7 @@ function init(){
     document.getElementById('birth-btn').style.display='none';
     logEvent('Naissance (présumée)','event');
   }, 5000);
-
+  buildApgar();
   requestWakeLock();
   logEvent('Préparation néonat démarrée','event');
   // Démarrer le chrono et le cycle immédiatement

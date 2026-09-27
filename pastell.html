@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>PASTELL</title>
+<style>
+:root{
+  --bg:#0a0a0a;--bg2:#141414;--bg3:#1e1e1e;--bg4:#2a2a2a;
+  --border:#333;
+  --text:#f0f0f0;--text2:#aaa;--text3:#555;
+  --red:#e83535;--red2:#ff6b6b;--red-bg:#2a1010;
+  --orange:#e87835;--orange2:#ffaa66;--orange-bg:#2a1808;
+  --green:#35c97a;--green2:#66ffaa;--green-bg:#0a2018;
+  --blue:#4da6ff;--blue2:#88ccff;--blue-bg:#0a1828;
+  --yellow:#f0c040;--yellow2:#ffe080;--yellow-bg:#2a2008;
+  --purple:#a855f7;--purple2:#c084fc;--purple-bg:#1a0a2a;
+  --r:10px;--rlg:14px;
+  --hh:70px;--nh:60px;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+}
+html[data-theme=light]{
+  --bg:#f0f0f0;--bg2:#fff;--bg3:#e8e8e8;--bg4:#ddd;--border:#ccc;
+  --text:#111;--text2:#555;--text3:#999;
+  --red:#c0392b;--red2:#e74c3c;--red-bg:#fdecea;
+  --orange:#d35400;--orange2:#e67e22;--orange-bg:#fef0e6;
+  --green:#1a8a45;--green2:#27ae60;--green-bg:#e8f8ee;
+  --blue:#1a6fad;--blue2:#2980b9;--blue-bg:#e8f4fd;
+  --yellow:#b8860b;--yellow2:#d4a017;--yellow-bg:#fef9e6;
+  --purple:#7c3aed;--purple2:#8b5cf6;--purple-bg:#f5f3ff;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden;}
+
+/* HEADER */
+#hdr{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:var(--bg);border-bottom:1px solid var(--border);
+  height:var(--hh);padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.hdr-left{display:flex;align-items:center;gap:10px;}
+.hdr-title{font-size:20px;font-weight:700;letter-spacing:-0.5px;}
+.hdr-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.ibtn{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+
+/* SCROLL */
+#main{position:fixed;top:var(--hh);bottom:var(--nh);left:0;right:0;overflow-y:auto;padding:10px 12px 20px;-webkit-overflow-scrolling:touch;}
+.tab{display:none;}
+.tab.active{display:block;}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rlg);padding:14px;margin-bottom:11px;}
+.ctitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:11px;}
+
+/* PATIENT SELECTOR */
+.patient-bar{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--rlg);padding:14px;margin-bottom:11px;
+  position:sticky;top:0;z-index:10;
+}
+.patient-row{display:flex;gap:10px;align-items:flex-end;}
+.patient-field{flex:1;}
+.field-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.field-input{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r);padding:8px 10px;color:var(--text);
+  font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;
+}
+.field-input:focus{outline:none;border-color:var(--blue);}
+
+/* Age unit toggle */
+.unit-toggle{display:flex;gap:4px;margin-top:6px;}
+.unit-btn{
+  flex:1;padding:5px;border-radius:6px;font-size:11px;font-weight:700;
+  cursor:pointer;border:1px solid var(--border);background:var(--bg4);color:var(--text3);
+}
+.unit-btn.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue2);}
+
+/* Poids estimé */
+#est-weight-row{display:none;margin-top:8px;padding:8px;background:var(--bg3);border-radius:var(--r);}
+.est-label{font-size:11px;color:var(--text3);margin-bottom:6px;}
+#est-slider{width:100%;}
+#est-val{font-size:13px;font-weight:700;color:var(--yellow2);text-align:center;margin-top:4px;}
+
+/* DRUG CARDS */
+.drug-card{
+  border-radius:var(--r);padding:12px;margin-bottom:8px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.drug-card:last-child{margin-bottom:0;}
+.drug-header{display:flex;align-items:baseline;gap:8px;margin-bottom:4px;}
+.drug-name{font-size:14px;font-weight:700;letter-spacing:0.3px;}
+.drug-route{font-size:11px;opacity:0.7;}
+.drug-dose{font-size:13px;opacity:0.8;margin-bottom:6px;}
+.drug-calc{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;}
+.drug-calc.italic{font-style:italic;opacity:0.75;}
+.drug-note{font-size:10px;opacity:0.65;margin-top:4px;font-style:italic;}
+
+/* Curseur dose */
+.dose-range-row{display:flex;align-items:center;gap:6px;margin:6px 0;}
+.dose-range-row input[type=range]{flex:1;}
+.dose-range-row span{font-size:11px;opacity:0.7;min-width:32px;}
+
+/* IGEL card */
+.igel-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.08);}
+.igel-row:last-child{border-bottom:none;}
+.igel-range{font-size:12px;color:var(--text2);}
+.igel-size{font-size:20px;font-weight:700;}
+.igel-highlight{border-radius:var(--r);padding:2px 8px;}
+
+/* CONSTANTES */
+.const-section{margin-bottom:16px;}
+.const-section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.const-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.const-row:last-child{border-bottom:none;}
+.const-name{font-size:13px;color:var(--text2);}
+.const-val{font-size:14px;font-weight:700;color:var(--text);}
+.const-unit{font-size:11px;color:var(--text3);margin-left:3px;}
+
+/* INFOS */
+.info-table{width:100%;border-collapse:collapse;font-size:12px;}
+.info-table th{text-align:left;padding:6px 4px;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);}
+.info-table td{padding:7px 4px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.4;}
+.info-table tr:last-child td{border-bottom:none;}
+.info-age{color:var(--blue2);font-weight:600;white-space:nowrap;}
+
+/* PARAMS */
+.prow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.prow:last-child{border-bottom:none;}
+.pname{font-size:14px;font-weight:500;}
+.pdesc{font-size:11px;color:var(--text3);margin-top:2px;}
+.tsw{width:48px;height:28px;background:var(--bg4);border-radius:14px;position:relative;cursor:pointer;border:1px solid var(--border);flex-shrink:0;transition:background .2s;}
+.tsw.on{background:var(--green);border-color:var(--green);}
+.tsw::after{content:'';position:absolute;width:22px;height:22px;background:var(--text3);border-radius:50%;top:2px;left:2px;transition:all .2s;}
+.tsw.on::after{left:22px;background:#fff;}
+
+/* Paramètres médicaments */
+.drug-param-row{padding:10px 0;border-bottom:1px solid var(--border);}
+.drug-param-row:last-child{border-bottom:none;}
+.drug-param-name{font-size:13px;font-weight:600;margin-bottom:6px;}
+.drug-param-opts{display:flex;gap:6px;margin-bottom:6px;}
+.dp-btn{flex:1;padding:6px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg4);color:var(--text3);text-align:center;}
+.dp-btn.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue2);}
+.dp-fields{display:flex;gap:6px;align-items:center;}
+.dp-inp{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:13px;}
+.dp-unit{font-size:11px;color:var(--text3);white-space:nowrap;}
+
+/* NAV */
+#nav{position:fixed;bottom:0;left:0;right:0;height:var(--nh);background:var(--bg);border-top:1px solid var(--border);display:flex;z-index:100;}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text3);font-size:10px;border:none;background:none;}
+.nb .ni{font-size:20px;line-height:1;}
+.nb.on{color:var(--purple2);}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div class="hdr-left">
+    <div>
+      <div class="hdr-title">💊 PASTELL</div>
+      <div class="hdr-sub" id="hdr-patient-summary">Saisir l'âge et le poids</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a href="cpr-tool.html" class="ibtn" title="Accueil" style="text-decoration:none;display:flex;align-items:center;justify-content:center">🏠</a>
+    <button class="ibtn" onclick="toggleTheme()">🌓</button>
+  </div>
+</div>
+
+<div id="main">
+
+  <!-- ── TAB MÉDICS ── -->
+  <div class="tab active" id="tab-drugs">
+
+    <!-- Barre patient sticky -->
+    <div class="patient-bar">
+      <div class="patient-row">
+
+        <!-- Âge -->
+        <div class="patient-field">
+          <div class="field-label">Âge</div>
+          <input class="field-input" id="age-input" type="number" min="0" max="18"
+            placeholder="—" oninput="onPatientChange()">
+          <div class="unit-toggle">
+            <button class="unit-btn on" id="unit-ans" onclick="setAgeUnit('ans')">Ans</button>
+            <button class="unit-btn" id="unit-mois" onclick="setAgeUnit('mois')">Mois</button>
+          </div>
+        </div>
+
+        <!-- Poids -->
+        <div class="patient-field">
+          <div class="field-label">Poids (kg)</div>
+          <input class="field-input" id="weight-input" type="number" min="1" max="100"
+            step="0.5" placeholder="—" oninput="onPatientChange()">
+          <div class="unit-toggle">
+            <button class="unit-btn" id="btn-est-weight" onclick="toggleEstWeight()">Estimé</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Curseur poids estimé -->
+      <div id="est-weight-row">
+        <div class="est-label" id="est-weight-label">Poids estimé selon l'âge</div>
+        <input type="range" id="est-slider" min="3" max="5" step="0.5" value="4"
+          oninput="onEstSlider(this.value)">
+        <div id="est-val">4 kg</div>
+      </div>
+
+      <!-- Résumé -->
+      <div id="patient-warning" style="display:none;margin-top:8px;font-size:11px;color:var(--orange2)"></div>
+    </div>
+
+    <!-- Médicaments -->
+    <div id="drugs-list">
+      <div style="text-align:center;color:var(--text3);font-size:13px;padding:30px 0">
+        Saisir l'âge et le poids pour afficher les dosages
+      </div>
+    </div>
+
+  </div><!-- /tab-drugs -->
+
+  <!-- ── TAB CONSTANTES ── -->
+  <div class="tab" id="tab-const">
+    <div class="card">
+      <div class="ctitle">Constantes vitales pédiatriques</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:12px">
+        Selon PALS 2025 et CHUV — Saisir l'âge dans l'onglet Médic.
+      </div>
+      <div id="const-content">
+        <div style="color:var(--text3);font-size:13px">Saisir l'âge pour afficher les constantes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB INFOS ── -->
+  <div class="tab" id="tab-info">
+
+    <div class="card">
+      <div class="ctitle">Alimentation</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:10px">Selon OMS</div>
+      <table class="info-table">
+        <thead><tr><th>Âge</th><th>Aliments</th><th>Fréquence</th><th>Quantité</th></tr></thead>
+        <tbody>
+          <tr><td class="info-age">0–6 mois</td><td>Lait maternel exclusif ou substitut</td><td>Toutes les 3–4 h</td><td>À satiété</td></tr>
+          <tr><td class="info-age">6–8 mois</td><td>Bouillies, purées + lait maternel</td><td>2×/j + tétées</td><td>2–3 c. à soupe → ~150 ml</td></tr>
+          <tr><td class="info-age">9–11 mois</td><td>Hachés, en purée, finger food</td><td>3–4×/j + 1–2 encas</td><td>150 ml / repas</td></tr>
+          <tr><td class="info-age">12–23 mois</td><td>Nourriture familiale coupée menu</td><td>3–4×/j + 2 encas</td><td>250 ml / repas</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">Psychomotricité</div>
+      <table class="info-table">
+        <thead><tr><th>Âge</th><th>Réflexes / préhension</th><th>Postural / locomotion</th><th>Sens / sourire</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="info-age">0–3 mois</td>
+            <td>Moro, Grasping (→5 mois), fouissement</td>
+            <td>Tenue de tête progressive (acquis à 3 mois)</td>
+            <td>Vision J4, audition dès naissance. Sourire dès 2–8 sem.</td>
+          </tr>
+          <tr>
+            <td class="info-age">3–6 mois</td>
+            <td>Manipulation cubito-palmaire</td>
+            <td>Tenue assise vers 6 mois, rampe sur fesses</td>
+            <td>Sourire intentionnel et communicatif dès 3 mois</td>
+          </tr>
+          <tr>
+            <td class="info-age">6–12 mois</td>
+            <td>Digito-palmaire (6 m), pince radio-digitale (9–10 m)</td>
+            <td>Station debout 9–10 m, marche 10 m – 2 ans</td>
+            <td>Maturation système sensitif et nocicepteur</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /tab-info -->
+
+  <!-- ── TAB PARAMS ── -->
+  <div class="tab" id="tab-params">
+
+    <div class="card">
+      <div class="ctitle">Guidelines</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button id="gl-corfa" onclick="setGuidelines('CORFA')"
+          style="flex:1;padding:10px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;border:2px solid var(--orange);background:var(--orange-bg);color:var(--orange2)">
+          CORFA
+        </button>
+        <button id="gl-vd" onclick="setGuidelines('VD')"
+          style="flex:1;padding:10px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2)">
+          Algo VD
+        </button>
+        <button id="gl-custom" onclick="setGuidelines('CUSTOM')"
+          style="flex:1;padding:10px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2)">
+          Perso.
+        </button>
+      </div>
+      <div id="gl-desc" style="font-size:11px;color:var(--text3);line-height:1.6;padding:8px;background:var(--bg3);border-radius:var(--r)"></div>
+    </div>
+
+    <!-- Versions -->
+    <div class="card">
+      <div class="ctitle">Versions des algorithmes</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.8">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+          <span style="color:var(--orange2);font-weight:600">CORFA</span><span>Fiches Pharmacologie 2026</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0">
+          <span style="color:var(--blue2);font-weight:600">Algo VD</span><span>Version 4-2025</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dosages personnalisés (visible si CUSTOM) -->
+    <div class="card" id="custom-drugs-card" style="display:none">
+      <div class="ctitle">Dosages personnalisés</div>
+      <div id="custom-drugs-list"></div>
+    </div>
+
+    <!-- Affichage -->
+    <div class="card">
+      <div class="ctitle">Affichage</div>
+      <div class="prow">
+        <div><div class="pname">Thème</div><div class="pdesc" id="theme-desc">Sombre</div></div>
+        <div class="tsw" id="sw-theme" onclick="toggleTheme()"></div>
+      </div>
+    </div>
+
+    <!-- Avertissement -->
+    <div class="card" style="font-size:11px;color:var(--text3);line-height:1.6">
+      <b style="color:var(--text2)">⚠ Avertissement</b><br>
+      Cet outil est une aide au calcul de dosages pédiatriques destinée à des professionnels de santé formés. Il ne remplace pas le jugement clinique ni les protocoles institutionnels. L'auteur ne garantit pas la conformité avec les recommandations en vigueur ni l'exactitude des calculs. Toujours vérifier les dosages avant administration.
+    </div>
+
+    <!-- Statut -->
+    <div class="card">
+      <div class="ctitle">Statut système</div>
+      <div class="prow"><div><div class="pname">Wake Lock</div><div class="pdesc" id="wl-desc">Vérification…</div></div></div>
+      <div class="prow"><div><div class="pname">Mode hors ligne</div><div class="pdesc" id="sw-desc">—</div></div></div>
+    </div>
+
+    <div class="card" style="text-align:center;color:var(--text3);font-size:11px">
+      PASTELL v1.0 — ©Mathias Weber<br>
+      Créé avec l'aide de claude.ai
+    </div>
+
+  </div><!-- /tab-params -->
+
+</div><!-- /main -->
+
+<nav id="nav">
+  <button class="nb on" onclick="showTab('drugs',this)"><span class="ni">💊</span>Médic.</button>
+  <button class="nb" onclick="showTab('const',this)"><span class="ni">📈</span>Constantes</button>
+  <button class="nb" onclick="showTab('info',this)"><span class="ni">📖</span>Infos</button>
+  <button class="nb" onclick="showTab('params',this)"><span class="ni">⚙️</span>Params</button>
+</nav>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const S={
+  guidelines:'CORFA',
+  lightTheme:false, _themeManual:false,
+  ageValue:null, ageUnit:'ans',
+  weight:null, useEstWeight:false,
+  customDoses:{}, // drugId → {type:'single'|'range', min, max, unit}
+};
+
+// ═══════════════════════════════════════════════════════
+// DONNÉES MÉDICAMENTS
+// ═══════════════════════════════════════════════════════
+const DRUGS=[
+  {
+    id:'adrenaline',
+    name:'ADREnaline',
+    route:'IV/IO',
+    bg:'rgb(222,191,217)', textColor:'#000',
+    CORFA:{type:'single', dose:0.01, unit:'mg/kg'},
+    VD:{type:'single', dose:0.01, unit:'mg/kg'},
+  },
+  {
+    id:'sucre',
+    name:'Sucre',
+    route:'PO/IV',
+    bg:'#fff', textColor:'#000',
+    CORFA:{type:'single', dose:0.2, unit:'g/kg'},
+    VD:{type:'range', min:0.5, max:1, unit:'g/kg'},
+  },
+  {
+    id:'midazolam',
+    name:'MIDAzolam',
+    route:'IM/IN',
+    bg:'rgb(255,102,0)', textColor:'#fff',
+    CORFA:{type:'range', min:0.1, max:0.2, unit:'ml/kg'},
+    VD:{type:'single', dose:0.2, unit:'mg/kg'},
+  },
+  {
+    id:'diazepam',
+    name:'DIAzépam',
+    route:'IR',
+    bg:'rgb(255,102,0)', textColor:'#fff',
+    CORFA:{type:'weight', lt15:5, gte15:10, unit:'mg'},
+    VD:{type:'weight', lt15:5, gte15:10, unit:'mg', notAutonomous:true},
+  },
+  {
+    id:'atropine',
+    name:'ATROpine',
+    route:'IVD',
+    bg:'rgb(163,217,99)', textColor:'#000',
+    CORFA:{type:'range', min:0.02, max:0.02, unit:'mg/kg', minDose:0.1, maxDose:0.5},
+    VD:{type:'range', min:0.02, max:0.02, unit:'mg/kg', minDose:0.1, maxDose:0.5, notAutonomous:true},
+  },
+  {
+    id:'etomidate',
+    name:'ETOmidate',
+    route:'IV',
+    bg:'rgb(255,255,0)', textColor:'#000',
+    CORFA:{type:'single', dose:0.02, unit:'mg/kg'},
+    VD:{type:'single', dose:0.02, unit:'mg/kg', notAutonomous:true},
+  },
+  {
+    id:'ketamine',
+    name:'KETAmine',
+    route:'IV/IM',
+    bg:'rgb(255,255,0)', textColor:'#000',
+    CORFA:{type:'routes', routes:[{route:'IV',min:1,max:3,unit:'mg/kg'},{route:'IM',min:4,max:8,unit:'mg/kg'}]},
+    VD:{type:'routes', routes:[{route:'IV',min:1,max:3,unit:'mg/kg'},{route:'IM',min:4,max:8,unit:'mg/kg'}], notAutonomous:true},
+  },
+  {
+    id:'propofol',
+    name:'PROPofol',
+    route:'IV/IO',
+    bg:'rgb(255,255,0)', textColor:'#000',
+    CORFA:{type:'range', min:2.5, max:5, unit:'mg/kg', notAutonomous:true, source:'Pharmacologie Pédiatrique © Brigade Sanitaire Cantonale, 2025 - v.3'},
+    VD:{type:'range', min:2.5, max:5, unit:'mg/kg', notAutonomous:true, source:'Pharmacologie Pédiatrique © Brigade Sanitaire Cantonale, 2025 - v.3'},
+  },
+  {
+    id:'rocuronium',
+    name:'ROCuronium',
+    route:'IV/IO',
+    bg:'rgb(253,121,86)', textColor:'#000',
+    CORFA:{type:'single', dose:1, unit:'mg/kg', notAutonomous:true, source:'Pharmacologie Pédiatrique © Brigade Sanitaire Cantonale, 2025 - v.3'},
+    VD:{type:'single', dose:1, unit:'mg/kg', notAutonomous:true, source:'Pharmacologie Pédiatrique © Brigade Sanitaire Cantonale, 2025 - v.3'},
+  },
+  {
+    id:'suxamethonium',
+    name:'SUXaméthonium',
+    route:'IV/IO',
+    bg:'rgb(253,121,86)', textColor:'#000',
+    CORFA:{type:'range', min:1, max:1.5, unit:'mg/kg'},
+    VD:{type:'range', min:1, max:1.5, unit:'mg/kg', notAutonomous:true},
+  },
+  {
+    id:'txa',
+    name:'TXA',
+    route:'IVL',
+    bg:'#1e1e1e', textColor:'#f0f0f0',
+    CORFA:{type:'single', dose:15, unit:'mg/kg'},
+    VD:{type:'single', dose:15, unit:'mg/kg', notAutonomous:true},
+  },
+];
+
+const ELECTRICITY={
+  shock1:{type:'jkg', dose:2, unit:'J/kg'},
+  shock2:{type:'jkg', dose:4, unit:'J/kg'},
+  maxCORFA:{type:'jkg', dose:8, unit:'J/kg'},
+  maxVD:{type:'jkg', dose:10, unit:'J/kg'},
+};
+
+const TUBE_FORMULA='age/4 + 3.5';
+
+const FLUIDS={
+  CORFA:{label:'20 ml/kg (5–10 ml/kg selon situation)', perKg:20},
+  VD:{label:'20 ml/kg (pas en autonomie)', perKg:20, notAutonomous:true},
+};
+
+const IGEL_SIZES=[
+  {min:2,max:5,size:'1',color:'#f8c1d9',textColor:'#000'},
+  {min:5,max:12,size:'1.5',color:'#cfe6f7',textColor:'#000'},
+  {min:10,max:25,size:'2',color:'#69737b',textColor:'#fff'},
+  {min:25,max:35,size:'2.5',color:'#fdfcfc',textColor:'#000'},
+];
+
+// ═══════════════════════════════════════════════════════
+// CONSTANTES VITALES
+// ═══════════════════════════════════════════════════════
+const VITALS=[
+  {
+    label:'Nouveau-né (<28j)',
+    ageMonthsMin:0, ageMonthsMax:1,
+    fr:null,
+    fc:{awake:'100 – 205',asleep:'90 – 160'},
+    bp:{hypo:'<50',sys:'60 – 76',dia:'31 – 45',map:'48 – 57'},
+  },
+  {
+    label:'Nourrisson (1–12 mois)',
+    ageMonthsMin:1, ageMonthsMax:12,
+    fr:{range:'30 –53'},
+    fc:{awake:'100 – 180',asleep:'—'},
+    bp:{hypo:'<70',sys:'72 – 104',dia:'37 – 56',map:'50 – 62'},
+  },
+  {
+    label:'1–2 ans',
+    ageMonthsMin:12, ageMonthsMax:24,
+    fr:{range:'22 – 37'},
+    fc:{awake:'98 – 140',asleep:'80 –120'},
+    bp:{hypo:'70+2×âge',sys:'86 – 106',dia:'42 – 63',map:'49 – 62'},
+  },
+  {
+    label:'3–5 ans',
+    ageMonthsMin:36, ageMonthsMax:60,
+    fr:{range:'20 – 28'},
+    fc:{awake:'80 – 120',asleep:'65 – 100'},
+    bp:{hypo:'—',sys:'89 – 112',dia:'46 – 72',map:'58 – 69'},
+  },
+  {
+    label:'6–11 ans',
+    ageMonthsMin:72, ageMonthsMax:132,
+    fr:{range:'18 – 25'},
+    fc:{awake:'75 – 118',asleep:'58 – 90'},
+    bp:{hypo:'<90',sys:'97 – 120',dia:'57 – 80',map:'66 – 79'},
+  },
+  {
+    label:'12–15 ans',
+    ageMonthsMin:144, ageMonthsMax:180,
+    fr:{range:'12 – 20'},
+    fc:{awake:'60 – 100',asleep:'50 – 90'},
+    bp:{hypo:'<90',sys:'110 – 131',dia:'64 – 83',map:'73 – 84'},
+  },
+];
+
+// ═══════════════════════════════════════════════════════
+// AGE & POIDS
+// ═══════════════════════════════════════════════════════
+function setAgeUnit(unit){
+  S.ageUnit=unit;
+  document.getElementById('unit-ans').classList.toggle('on',unit==='ans');
+  document.getElementById('unit-mois').classList.toggle('on',unit==='mois');
+  document.getElementById('age-input').placeholder=unit==='ans'?'Ans':'Mois';
+  onPatientChange();
+  savePrefs();
+}
+
+function getAgeMonths(){
+  if(S.ageValue===null||S.ageValue==='') return null;
+  const v=parseFloat(S.ageValue);
+  if(isNaN(v)||v<0) return null;
+  return S.ageUnit==='ans'?Math.round(v*12):Math.round(v);
+}
+
+function getAgeYears(){
+  const m=getAgeMonths();
+  return m===null?null:m/12;
+}
+
+function toggleEstWeight(){
+  S.useEstWeight=!S.useEstWeight;
+  const btn=document.getElementById('btn-est-weight');
+  const row=document.getElementById('est-weight-row');
+  const inp=document.getElementById('weight-input');
+  btn.classList.toggle('on',S.useEstWeight);
+  row.style.display=S.useEstWeight?'block':'none';
+  inp.disabled=S.useEstWeight;
+  if(S.useEstWeight) updateEstWeight();
+  else onPatientChange();
+}
+
+function updateEstWeight(){
+  const ageM=getAgeMonths();
+  if(ageM===null){
+    document.getElementById('est-weight-row').style.display='none';
+    return;
+  }
+  let min,max,label;
+  if(ageM<3){min=3;max=4;label='< 3 mois : 3–4 kg';}
+  else if(ageM<5){min=6;max=7;label='3–5 mois : 6–7 kg';}
+  else if(ageM<12){min=8;max=9;label='5–11 mois : 8–9 kg';}
+  else{
+    // ≥ 1 an : (âge × 2) + 8
+    const yr=ageM/12;
+    const est=Math.round(yr*2+8);
+    min=max=est;
+    label='Estimé : '+(yr>=10?'<i>':'')+(yr*2+8).toFixed(1)+' kg'+(yr>=10?' (estimation moins fiable à partir de 10 ans)</i>':'');
+  }
+  const slider=document.getElementById('est-slider');
+  slider.min=min; slider.max=max; slider.step=0.5;
+  const mid=Math.round((min+max)/2*2)/2;
+  slider.value=mid;
+  document.getElementById('est-weight-label').innerHTML=label;
+  onEstSlider(mid);
+}
+
+function onEstSlider(val){
+  S.weight=parseFloat(val);
+  document.getElementById('est-val').textContent=val+' kg';
+  document.getElementById('weight-input').value=val;
+  updateUI();
+}
+
+function onPatientChange(){
+  S.ageValue=document.getElementById('age-input').value;
+  if(!S.useEstWeight){
+    const w=parseFloat(document.getElementById('weight-input').value);
+    S.weight=isNaN(w)?null:w;
+  }
+  if(S.useEstWeight) updateEstWeight();
+  updateUI();
+  savePrefs();
+}
+
+function updateUI(){
+  const ageM=getAgeMonths();
+  const w=S.weight;
+  // Header summary
+  const parts=[];
+  if(ageM!==null) parts.push(ageM<12?ageM+' mois':(ageM/12).toFixed(ageM%12===0?0:1)+' ans');
+  if(w!==null) parts.push(w+' kg');
+  document.getElementById('hdr-patient-summary').textContent=parts.length?parts.join(' — '):'Saisir l\'âge et le poids';
+  renderDrugs();
+  renderConstants();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDU MÉDICAMENTS
+// ═══════════════════════════════════════════════════════
+function calcDose(drug, weight, ageMonths, gl){
+  const d=gl==='CUSTOM'&&S.customDoses[drug.id]?buildCustomDrug(drug):
+          gl==='VD'&&drug.VD?drug.VD:drug.CORFA;
+  if(!d) return null;
+
+  const notAuto=d.notAutonomous?true:false;
+  const source=d.source||null;
+
+  if(d.type==='single'){
+    const dose=Math.round(weight*d.dose*100)/100;
+    return {type:'single', calc:dose+' '+d.unit.replace('/kg',''), notAuto, source};
+  }
+  if(d.type==='range'){
+    const dmin=Math.round(weight*d.min*100)/100;
+    const dmax=Math.round(weight*d.max*100)/100;
+    const unit=d.unit.replace('/kg','');
+    const extra=d.minDose?`\nMin: ${d.minDose} ${unit} / Max: ${d.maxDose} ${unit}`:'';
+    return {type:'range', min:dmin, max:dmax, med:Math.round((dmin+dmax)/2*100)/100, unit, extra, notAuto, source};
+  }
+  if(d.type==='weight'){
+    const dose=weight<15?d.lt15:d.gte15;
+    return {type:'single', calc:dose+' '+d.unit, notAuto, source};
+  }
+  if(d.type==='routes'){
+    return {type:'routes', routes:d.routes.map(r=>({
+      route:r.route,
+      min:Math.round(weight*r.min*100)/100,
+      max:Math.round(weight*r.max*100)/100,
+      unit:r.unit.replace('/kg',''),
+    })), notAuto, source};
+  }
+  return null;
+}
+
+function buildCustomDrug(drug){
+  const c=S.customDoses[drug.id];
+  if(!c) return drug.CORFA;
+  if(c.type==='single') return {type:'single', dose:parseFloat(c.dose)||0, unit:c.unit+'/kg'};
+  return {type:'range', min:parseFloat(c.min)||0, max:parseFloat(c.max)||0, unit:c.unit+'/kg'};
+}
+
+function renderDrugs(){
+  const container=document.getElementById('drugs-list');
+  const ageM=getAgeMonths();
+  const w=S.weight;
+  const gl=S.guidelines;
+
+  if(!w||!ageM){
+    container.innerHTML='<div style="text-align:center;color:var(--text3);font-size:13px;padding:30px 0">Saisir l\'âge et le poids pour afficher les dosages</div>';
+    return;
+  }
+
+  const ageYr=ageM/12;
+  let html='';
+
+  // === TUBE ===
+  const tubeSize=(ageYr/4+3.5).toFixed(1);
+  html+=drugCard({bg:'#fff',textColor:'#000'},`
+    <div class="drug-header"><span class="drug-name">Tube</span><span class="drug-route">CORFA / VD</span></div>
+    <div class="drug-dose">Âge / 4 + 3,5</div>
+    <div class="drug-calc">${tubeSize} mm</div>
+  `);
+
+  // === ÉLECTRICITÉ ===
+  const j1=Math.round(w*2), j2=Math.round(w*4);
+  const jmax=gl==='VD'?Math.round(w*10):Math.round(w*8);
+  const jmaxLabel=gl==='VD'?'10 J/kg':'8 J/kg';
+  html+=drugCard({bg:'#fff',textColor:'#000'},`
+    <div class="drug-header"><span class="drug-name">Électricité</span></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <div style="flex:1;text-align:center;padding:8px;background:rgba(0,0,0,0.08);border-radius:8px">
+        <div style="font-size:10px;opacity:0.6;margin-bottom:2px">1er choc · 2 J/kg</div>
+        <div class="drug-calc">${j1} J</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:8px;background:rgba(0,0,0,0.08);border-radius:8px">
+        <div style="font-size:10px;opacity:0.6;margin-bottom:2px">2ème choc · 4 J/kg</div>
+        <div class="drug-calc">${j2} J</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:8px;background:rgba(0,0,0,0.08);border-radius:8px">
+        <div style="font-size:10px;opacity:0.6;margin-bottom:2px">Max · ${jmaxLabel}</div>
+        <div class="drug-calc">${jmax} J</div>
+      </div>
+    </div>
+  `);
+
+  // === FLUIDE ===
+  const fl=gl==='VD'?FLUIDS.VD:FLUIDS.CORFA;
+  const flVol=Math.round(w*fl.perKg);
+  html+=drugCard({bg:'#fff',textColor:'#000'},`
+    <div class="drug-header"><span class="drug-name">Liquide</span><span class="drug-route">IV</span></div>
+    <div class="drug-dose">${fl.label}</div>
+    <div class="drug-calc${fl.notAutonomous?' italic':''}">${flVol} ml${fl.notAutonomous?' *':''}</div>
+    ${fl.notAutonomous?'<div class="drug-note">* Pas en autonomie — dosage CORFA indicatif</div>':''}
+  `);
+
+  // === MÉDICAMENTS ===
+  for(const drug of DRUGS){
+    const dose=calcDose(drug,w,ageM,gl);
+    if(!dose) continue;
+    let content=`<div class="drug-header"><span class="drug-name">${drug.name}</span><span class="drug-route">${drug.route}</span></div>`;
+    const notAuto=dose.notAuto;
+    const srcNote=dose.source?`<div class="drug-note">Source : ${dose.source}</div>`:'';
+    const autoNote=notAuto?'<div class="drug-note">* Pas en autonomie — dosage indicatif</div>':'';
+
+    if(dose.type==='single'){
+      content+=`<div class="drug-calc${notAuto?' italic':''}">${dose.calc}${notAuto?' *':''}</div>${srcNote}${autoNote}`;
+    } else if(dose.type==='range'){
+      const sliderId='slider-'+drug.id;
+      const calcId='calc-'+drug.id;
+      content+=`
+        <div class="dose-range-row">
+          <span>${dose.min} ${dose.unit}</span>
+          <input type="range" id="${sliderId}" min="${dose.min}" max="${dose.max}"
+            step="${Math.max(0.01,Math.round((dose.max-dose.min)/20*100)/100)}"
+            value="${dose.med}"
+            oninput="document.getElementById('${calcId}').textContent=parseFloat(this.value).toFixed(2)+' ${dose.unit}'">
+          <span style="text-align:right">${dose.max} ${dose.unit}</span>
+        </div>
+        <div class="drug-calc${notAuto?' italic':''}" id="${calcId}">${dose.med} ${dose.unit}${notAuto?' *':''}</div>
+        ${dose.extra?`<div class="drug-note">${dose.extra}</div>`:''}
+        ${srcNote}${autoNote}`;
+    } else if(dose.type==='routes'){
+      content+=dose.routes.map(r=>`
+        <div style="margin-bottom:6px">
+          <div style="font-size:11px;opacity:0.7;margin-bottom:3px">${r.route}</div>
+          <div class="drug-calc${notAuto?' italic':''}" style="font-size:18px">${r.min}–${r.max} ${r.unit}${notAuto?' *':''}</div>
+        </div>`).join('');
+      content+=`${srcNote}${autoNote}`;
+    }
+    html+=drugCard(drug,content);
+  }
+
+  // === I-GEL ===
+  html+=`<div class="drug-card" style="background:var(--bg2);border:1px solid var(--border)">
+    <div class="drug-header" style="color:var(--text)"><span class="drug-name">I-Gel</span></div>`;
+  for(const ig of IGEL_SIZES){
+    const isCurrent=w>=ig.min&&w<ig.max;
+    html+=`<div class="igel-row${isCurrent?' igel-highlight':''}">
+      <span class="igel-range">${ig.min}–${ig.max} kg</span>
+      <span class="igel-size" style="color:${isCurrent?ig.textColor:'var(--text)'};${isCurrent?`background:${ig.color};padding:2px 10px;border-radius:8px`:''}">
+        Taille ${ig.size}
+      </span>
+    </div>`;
+  }
+  html+='</div>';
+
+  container.innerHTML=html;
+}
+
+function drugCard(drug,content){
+  const bg=drug.bg||'var(--bg2)';
+  const tc=drug.textColor||'var(--text)';
+  return `<div class="drug-card" style="background:${bg};color:${tc}">${content}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// CONSTANTES
+// ═══════════════════════════════════════════════════════
+function renderConstants(){
+  const ageM=getAgeMonths();
+  const container=document.getElementById('const-content');
+  if(ageM===null){
+    container.innerHTML='<div style="color:var(--text3);font-size:13px">Saisir l\'âge pour afficher les constantes</div>';
+    return;
+  }
+
+  // Trouver la catégorie correspondante
+  const cat=VITALS.find(v=>ageM>=v.ageMonthsMin&&ageM<v.ageMonthsMax)
+    ||VITALS[VITALS.length-1];
+
+  let html=`<div style="font-size:13px;font-weight:700;color:var(--blue2);margin-bottom:12px">${cat.label}</div>`;
+
+  html+=`<div class="const-section">
+    <div class="const-section-title">Fréquence respiratoire</div>`;
+  if(cat.fr){
+    html+=`<div class="const-row"><span class="const-name">FR éveil</span><span class="const-val">${cat.fr.range}<span class="const-unit">min⁻¹</span></span></div>`;
+  } else {
+    html+=`<div class="const-row"><span class="const-name">FR</span><span class="const-val" style="color:var(--text3)">Non disponible pour cet âge</span></div>`;
+  }
+  html+=`</div>`;
+
+  html+=`<div class="const-section">
+    <div class="const-section-title">Fréquence cardiaque</div>
+    <div class="const-row"><span class="const-name">FC éveil</span><span class="const-val">${cat.fc.awake}<span class="const-unit">min⁻¹</span></span></div>
+    ${cat.fc.asleep&&cat.fc.asleep!=='—'?`<div class="const-row"><span class="const-name">FC sommeil</span><span class="const-val">${cat.fc.asleep}<span class="const-unit">min⁻¹</span></span></div>`:''}
+  </div>`;
+
+  html+=`<div class="const-section">
+    <div class="const-section-title">Tension artérielle</div>
+    <div class="const-row"><span class="const-name">Hypotension</span><span class="const-val" style="color:var(--red2)">${cat.bp.hypo}<span class="const-unit">mmHg</span></span></div>
+    <div class="const-row"><span class="const-name">TAs</span><span class="const-val">${cat.bp.sys}<span class="const-unit">mmHg</span></span></div>
+    <div class="const-row"><span class="const-name">TAd</span><span class="const-val">${cat.bp.dia}<span class="const-unit">mmHg</span></span></div>
+    <div class="const-row"><span class="const-name">TAm</span><span class="const-val">${cat.bp.map}<span class="const-unit">mmHg</span></span></div>
+  </div>`;
+
+  container.innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════
+// GUIDELINES
+// ═══════════════════════════════════════════════════════
+const GL_DESCS={
+  CORFA:'CORFA (Fiches Pharmacologie 2026) — Dosages pour les intervenants formés selon le référentiel CORFA.',
+  VD:'Algo VD (v4-2025) — Dosages en autonomie selon les algorithmes vaudois. Les médicaments non listés utilisent les dosages CORFA et sont indiqués en italique.',
+  CUSTOM:'Personnalisé — Dosages définis manuellement dans les paramètres ci-dessous.',
+};
+
+function setGuidelines(gl){
+  S.guidelines=gl;
+  savePrefs();
+  ['CORFA','VD','CUSTOM'].forEach(g=>{
+    const btn=document.getElementById('gl-'+g.toLowerCase());
+    if(!btn) return;
+    const active=g===gl;
+    const colors={CORFA:'orange',VD:'blue',CUSTOM:'purple'};
+    const c=colors[g];
+    btn.style.border=active?`2px solid var(--${c})`:`1px solid var(--border)`;
+    btn.style.background=active?`var(--${c}-bg)`:`var(--bg3)`;
+    btn.style.color=active?`var(--${c}2)`:`var(--text2)`;
+  });
+  document.getElementById('gl-desc').textContent=GL_DESCS[gl]||'';
+  document.getElementById('custom-drugs-card').style.display=gl==='CUSTOM'?'block':'none';
+  if(gl==='CUSTOM') renderCustomDrugParams();
+  renderDrugs();
+}
+
+// ═══════════════════════════════════════════════════════
+// DOSAGES PERSONNALISÉS
+// ═══════════════════════════════════════════════════════
+function renderCustomDrugParams(){
+  const container=document.getElementById('custom-drugs-list');
+  container.innerHTML=DRUGS.map(drug=>{
+    const c=S.customDoses[drug.id]||{type:'single',dose:'',min:'',max:'',unit:'mg/kg'};
+    return `<div class="drug-param-row">
+      <div class="drug-param-name">${drug.name} ${drug.route}</div>
+      <div class="drug-param-opts">
+        <div class="dp-btn${c.type==='single'?' on':''}" onclick="setCustomType('${drug.id}','single')">Unique</div>
+        <div class="dp-btn${c.type==='range'?' on':''}" onclick="setCustomType('${drug.id}','range')">Plage</div>
+      </div>
+      <div class="dp-fields" id="cp-fields-${drug.id}">
+        ${c.type==='single'
+          ?`<input class="dp-inp" placeholder="Dose" value="${c.dose||''}"
+              oninput="updateCustomDose('${drug.id}','dose',this.value)">`
+          :`<input class="dp-inp" placeholder="Min" value="${c.min||''}"
+              oninput="updateCustomDose('${drug.id}','min',this.value)">
+            <span class="dp-unit">–</span>
+            <input class="dp-inp" placeholder="Max" value="${c.max||''}"
+              oninput="updateCustomDose('${drug.id}','max',this.value)">`
+        }
+        <input class="dp-inp" placeholder="Unité" value="${c.unit||'mg/kg'}" style="max-width:70px"
+          oninput="updateCustomDose('${drug.id}','unit',this.value)">
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setCustomType(drugId,type){
+  if(!S.customDoses[drugId]) S.customDoses[drugId]={type,dose:'',min:'',max:'',unit:'mg/kg'};
+  S.customDoses[drugId].type=type;
+  savePrefs();
+  renderCustomDrugParams();
+  renderDrugs();
+}
+
+function updateCustomDose(drugId,field,val){
+  if(!S.customDoses[drugId]) S.customDoses[drugId]={type:'single',dose:'',min:'',max:'',unit:'mg/kg'};
+  S.customDoses[drugId][field]=val;
+  savePrefs();
+  renderDrugs();
+}
+
+// ═══════════════════════════════════════════════════════
+// THÈME
+// ═══════════════════════════════════════════════════════
+function toggleTheme(){
+  S.lightTheme=!S.lightTheme; S._themeManual=true;
+  applyTheme();
+  savePrefs();
+}
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme',S.lightTheme?'light':'');
+  document.getElementById('sw-theme').classList.toggle('on',S.lightTheme);
+  document.getElementById('theme-desc').textContent=S.lightTheme?'Clair':'Sombre';
+}
+
+// ═══════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════
+function showTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ═══════════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════════
+function savePrefs(){
+  localStorage.setItem('pastell-prefs',JSON.stringify({
+    guidelines:S.guidelines,
+    lightTheme:S.lightTheme, themeManual:S._themeManual,
+    ageUnit:S.ageUnit,
+    customDoses:S.customDoses,
+  }));
+}
+function loadPrefs(){
+  try{
+    const p=JSON.parse(localStorage.getItem('pastell-prefs')||'{}');
+    if(p.guidelines) S.guidelines=p.guidelines;
+    if(p.ageUnit) S.ageUnit=p.ageUnit;
+    if(p.customDoses) S.customDoses=p.customDoses;
+    if(p.themeManual&&p.lightTheme!==undefined){
+      S.lightTheme=p.lightTheme; S._themeManual=true;
+    }
+  }catch(_){}
+}
+
+// ═══════════════════════════════════════════════════════
+// WAKE LOCK
+// ═══════════════════════════════════════════════════════
+async function requestWakeLock(){
+  if(!('wakeLock' in navigator)){
+    document.getElementById('wl-desc').textContent='Non supporté';return;
+  }
+  try{
+    S.wakeLock=await navigator.wakeLock.request('screen');
+    document.getElementById('wl-desc').textContent='Actif ✓';
+    S.wakeLock.addEventListener('release',async()=>{
+      if(document.visibilityState==='visible') await requestWakeLock();
+    });
+  }catch(e){
+    document.getElementById('wl-desc').textContent='Refusé';
+  }
+}
+document.addEventListener('visibilitychange',async()=>{
+  if(document.visibilityState==='visible') await requestWakeLock();
+});
+
+// Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw-pastell.js').then(()=>{
+    document.getElementById('sw-desc').textContent='Hors ligne activé ✓';
+  }).catch(()=>{
+    document.getElementById('sw-desc').textContent='Erreur (hébergement requis)';
+  });
+}
+
+// Système
+if(window.matchMedia){
+  const mq=window.matchMedia('(prefers-color-scheme: light)');
+  if(mq.matches&&!S._themeManual){S.lightTheme=true;}
+  mq.addEventListener('change',e=>{if(!S._themeManual){S.lightTheme=e.matches;applyTheme();}});
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function init(){
+  loadPrefs();
+  setGuidelines(S.guidelines);
+  setAgeUnit(S.ageUnit);
+  applyTheme();
+  requestWakeLock();
+}
+init();
+</script>
+</body>
+</html>

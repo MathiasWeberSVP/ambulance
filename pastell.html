@@ -333,10 +333,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       </div>
     </div>
 
-    <!-- Avertissement -->
-    <div class="card" style="font-size:11px;color:var(--text3);line-height:1.6">
-      <b style="color:var(--text2)">⚠ Avertissement</b><br>
-      Cet outil est une aide au calcul de dosages pédiatriques destinée à des professionnels de santé formés. Il ne remplace pas le jugement clinique ni les protocoles institutionnels. L'auteur ne garantit pas la conformité avec les recommandations en vigueur ni l'exactitude des calculs. Toujours vérifier les dosages avant administration.
+    <div class="card">
+      <div class="ctitle">Installation PWA</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">
+        <b>Android (Chrome)</b> : menu ⋮ → "Ajouter à l'écran d'accueil"<br>
+        <b>iOS (Safari)</b> : bouton Partager → "Sur l'écran d'accueil"<br><br>
+        <div style="color:var(--text3)">L'app fonctionnera hors ligne une fois les fichiers mis en cache.</div>
+      </div>
+      <button id="pwa-install-btn" style="display:none;width:100%;margin-top:10px;padding:11px;background:var(--green-bg);border:1px solid var(--green);border-radius:var(--r);color:var(--green2);font-size:14px;font-weight:700;cursor:pointer" onclick="installPWA()">📲 Installer l'application</button>
     </div>
 
     <!-- Statut -->
@@ -344,6 +348,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div class="ctitle">Statut système</div>
       <div class="prow"><div><div class="pname">Wake Lock</div><div class="pdesc" id="wl-desc">Vérification…</div></div></div>
       <div class="prow"><div><div class="pname">Mode hors ligne</div><div class="pdesc" id="sw-desc">—</div></div></div>
+    </div>
+
+    <!-- Avertissement -->
+    <div class="card" style="font-size:11px;color:var(--text3);line-height:1.6">
+      <b style="color:var(--text2)">⚠ Avertissement</b><br>
+      Cet outil est une aide au calcul de dosages pédiatriques destinée à des professionnels de santé formés. Il ne remplace pas le jugement clinique ni les protocoles institutionnels. L'auteur ne garantit pas la conformité avec les recommandations en vigueur ni l'exactitude des calculs. Toujours vérifier les dosages avant administration.
     </div>
 
     <div class="card" style="text-align:center;color:var(--text3);font-size:11px">
@@ -984,6 +994,17 @@ if(window.matchMedia){
   const mq=window.matchMedia('(prefers-color-scheme: light)');
   if(mq.matches&&!S._themeManual){S.lightTheme=true;}
   mq.addEventListener('change',e=>{if(!S._themeManual){S.lightTheme=e.matches;applyTheme();}});
+}
+
+// ══════════════════════════════════════════════════════════
+// PWA INSTALL
+// ══════════════════════════════════════════════════════════
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); S.pwaPrompt=e;
+  document.getElementById('pwa-install-btn').style.display='block';
+});
+function installPWA(){
+  if(S.pwaPrompt){ S.pwaPrompt.prompt(); S.pwaPrompt.userChoice.then(()=>S.pwaPrompt=null); }
 }
 
 // ═══════════════════════════════════════════════════════

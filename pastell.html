@@ -458,7 +458,7 @@ const BP_DATA=[
    hypo:'—',sys:'89–112',dia:'46–72',map:'58–69'},
   {label:'6–9 ans',ageMonthsMin:72,ageMonthsMax:108,
    hypo:'—',sys:'97–115',dia:'57–76',map:'66–72'},
-  {label:'10–12 ans',ageMonthsMin:108,ageMonthsMax:144,
+  {label:'10–11 ans',ageMonthsMin:108,ageMonthsMax:144,
    hypo:'<90',sys:'102–120',dia:'61–80',map:'71–79'},
   {label:'12–15 ans',ageMonthsMin:144,ageMonthsMax:999,
    hypo:'<90',sys:'110–131',dia:'64–83',map:'73–84'},
@@ -791,15 +791,19 @@ function renderBP(){
   if(!tbody) return;
 
   tbody.innerHTML=BP_DATA.map(row=>{
-    // Trouver si c'est la tranche courante
     const isCurrent=ageM!==null&&ageM>=row.ageMonthsMin&&ageM<row.ageMonthsMax;
-    // Calculer hypo dynamique pour 1-2 ans
+    
     let hypo=row.hypo;
-    if(hypo==='calc'&&ageYr!==null){
-      hypo='<'+Math.round(70+2*ageYr)+' mmHg';
-    } else if(hypo!=='—'&&hypo!=='calc'){
+    if(ageYr!==null && row.hypo==='calc'){
+      // 1–2 ans : formule exacte
+      hypo='< '+Math.round(70+2*ageYr)+' mmHg';
+    } else if(ageYr!==null && row.hypo==='—' && isCurrent){
+      // 3–5 ans et 6–9 ans : calculer si c'est la tranche active
+      hypo='< '+Math.round(70+2*ageYr)+' mmHg';
+    } else if(hypo!=='—'){
       hypo=hypo+' mmHg';
     }
+
     return `<tr class="${isCurrent?'bp-cur':''}">
       <td class="bp-age">${row.label}</td>
       <td class="bp-hypo">${hypo}</td>

@@ -369,9 +369,9 @@ const DRUGS=[
   {
     id:'etomidate',name:'ETOmidate',route:'IV',
     bg:'rgb(255,255,0)',textColor:'#000',
-    posologyCORFA:'0.02 mg/kg',posologyVD:'0.02 mg/kg *',
-    CORFA:{type:'single',dose:0.02,unit:'mg/kg'},
-    VD:{type:'single',dose:0.02,unit:'mg/kg',notAutonomous:true},
+    posologyCORFA:'0.3–0.4 mg/kg',posologyVD:'0.3–0.4 mg/kg *',
+    CORFA:{type:'range',min:0.3,max:0.4,unit:'mg/kg'},
+    VD:{type:'range',min:0.3,max:0.4,unit:'mg/kg',notAutonomous:true},
   },
   {
     id:'ketamine',name:'KETAmine',route:'IV/IM',

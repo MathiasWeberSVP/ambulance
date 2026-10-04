@@ -628,48 +628,88 @@ function renderDrugs(){
   const ageYr=ageM!==null?ageM/12:null;
   let html='';
 
-  // TUBE — nécessite age
-  if(ageYr!==null){
-    const tubeSize=(ageYr/4+3.5).toFixed(1);
-    html+=drugCard({bg:'#ffffff',textColor:'#000'},`
-      <div class="drug-header"><span class="drug-name">Tube</span><span class="drug-route">CORFA / VD</span></div>
-      <div class="drug-posology">Âge / 4 + 3.5</div>
-      <div class="drug-calc">${tubeSize} mm</div>`);
-  }
+  // Ordre d'affichage : construire une liste ordonnée d'éléments à rendre
+  const items=[
+    'adrenaline','sucre',
+    '__tube__','__electricite__','__fluide__',
+    'midazolam','diazepam','atropine','etomidate','ketamine','propofol',
+    'rocuronium','suxamethonium','__igel__','txa'
+  ];
 
-  // ÉLECTRICITÉ — nécessite poids
-  const j1=Math.round(w*2),j2=Math.round(w*4);
-  const jmax=gl==='VD'?Math.round(w*10):Math.round(w*8);
-  const jmaxLabel=gl==='VD'?'10 J/kg':'8 J/kg';
-  html+=drugCard({bg:'#ffffff',textColor:'#000'},`
-    <div class="drug-header"><span class="drug-name">Électricité</span></div>
-    <div class="drug-posology">1er: 2 J/kg · 2ème: 4 J/kg · Max: ${jmaxLabel}</div>
-    <div style="display:flex;gap:8px;margin-top:6px">
-      <div style="flex:1;text-align:center;padding:10px;background:rgba(0,0,0,0.08);border-radius:8px">
-        <div style="font-size:10px;opacity:0.6;margin-bottom:2px">1er choc</div>
-        <div class="drug-calc" style="font-size:20px">${j1} J</div>
-      </div>
-      <div style="flex:1;text-align:center;padding:10px;background:rgba(0,0,0,0.08);border-radius:8px">
-        <div style="font-size:10px;opacity:0.6;margin-bottom:2px">2ème choc</div>
-        <div class="drug-calc" style="font-size:20px">${j2} J</div>
-      </div>
-      <div style="flex:1;text-align:center;padding:10px;background:rgba(0,0,0,0.08);border-radius:8px">
-        <div style="font-size:10px;opacity:0.6;margin-bottom:2px">Maximum</div>
-        <div class="drug-calc" style="font-size:20px">${jmax} J</div>
-      </div>
-    </div>`);
+  for(const item of items){
 
-  // FLUIDE
-  const fl=gl==='VD'?FLUIDS.VD:FLUIDS.CORFA;
-  const flVol=Math.round(w*fl.perKg);
-  html+=drugCard({bg:'#ffffff',textColor:'#000'},`
-    <div class="drug-header"><span class="drug-name">Liquide</span><span class="drug-route">IV</span></div>
-    <div class="drug-posology">${fl.label}</div>
-    <div class="drug-calc${fl.notAutonomous?' italic':''}">${flVol} ml${fl.notAutonomous?' *':''}</div>
-    ${fl.notAutonomous?'<div class="drug-note">* Pas en autonomie — dosage CORFA indicatif</div>':''}`);
+    if(item==='__tube__'){
+      if(ageYr===null) continue;
+      const tubeSize=(ageYr/4+3.5).toFixed(1);
+      html+=drugCard({bg:'#ffffff',textColor:'#000'},`
+        <div class="drug-header"><span class="drug-name">Tube</span><span class="drug-route">CORFA / VD</span></div>
+        <div class="drug-posology">Âge / 4 + 3.5</div>
+        <div class="drug-calc">${tubeSize} mm</div>`);
+      continue;
+    }
 
-  // MÉDICAMENTS
-  for(const drug of DRUGS){
+    if(item==='__electricite__'){
+      const j1=roundZoll(w*2),j2=roundZoll(w*4);
+      const jmaxRaw=gl==='VD'?w*10:w*8;
+      const jmax=roundZoll(jmaxRaw);
+      const jmaxLabel=gl==='VD'?'10 J/kg':'8 J/kg';
+      html+=drugCard({bg:'#ffffff',textColor:'#000'},`
+        <div class="drug-header"><span class="drug-name">Électricité</span></div>
+        <div class="drug-posology">1er: 2 J/kg · 2ème: 4 J/kg · Max: ${jmaxLabel}${S.zollRound?' · arrondi Zoll ↑':''}</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <div style="flex:1;text-align:center;padding:10px;background:rgba(0,0,0,0.08);border-radius:8px">
+            <div style="font-size:10px;opacity:0.6;margin-bottom:2px">1er choc</div>
+            <div class="drug-calc" style="font-size:20px">${j1} J</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:10px;background:rgba(0,0,0,0.08);border-radius:8px">
+            <div style="font-size:10px;opacity:0.6;margin-bottom:2px">2ème choc</div>
+            <div class="drug-calc" style="font-size:20px">${j2} J</div>
+          </div>
+          <div style="flex:1;text-align:center;padding:10px;background:rgba(0,0,0,0.08);border-radius:8px">
+            <div style="font-size:10px;opacity:0.6;margin-bottom:2px">Maximum</div>
+            <div class="drug-calc" style="font-size:20px">${jmax} J</div>
+          </div>
+        </div>`);
+      continue;
+    }
+
+    if(item==='__fluide__'){
+      const fl=gl==='VD'?FLUIDS.VD:FLUIDS.CORFA;
+      const flVol=Math.round(w*fl.perKg);
+      html+=drugCard({bg:'#ffffff',textColor:'#000'},`
+        <div class="drug-header"><span class="drug-name">Liquide</span><span class="drug-route">IV</span></div>
+        <div class="drug-posology">${fl.label}</div>
+        <div class="drug-calc${fl.notAutonomous?' italic':''}">${flVol} ml${fl.notAutonomous?' *':''}</div>
+        ${fl.notAutonomous?'<div class="drug-note">* Pas en autonomie — dosage CORFA indicatif</div>':''}`);
+      continue;
+    }
+
+    if(item==='__igel__'){
+      const igMatch=IGEL_SIZES.filter(ig=>w>=ig.min&&w<ig.max);
+      const igOthers=IGEL_SIZES.filter(ig=>!(w>=ig.min&&w<ig.max));
+      let igHtml=`<div class="drug-header" style="color:var(--text)"><span class="drug-name">I-Gel</span></div>`;
+      if(igMatch.length>0){
+        igMatch.forEach(ig=>{
+          igHtml+=`<div class="igel-current" style="background:${ig.color};color:${ig.textColor}">
+            <div class="igel-current-label">${w} kg → ${ig.min}–${ig.max} kg</div>
+            <div class="igel-current-size">Taille ${ig.size}</div>
+          </div>`;
+        });
+      } else {
+        igHtml+=`<div style="color:var(--text3);font-size:13px">Hors plage (2–35 kg)</div>`;
+      }
+      igHtml+=`<div class="igel-other">`;
+      igOthers.forEach(ig=>{
+        igHtml+=`<div class="igel-other-row"><span>${ig.min}–${ig.max} kg</span><span>Taille ${ig.size}</span></div>`;
+      });
+      igHtml+=`</div>`;
+      html+=`<div class="drug-card" style="background:var(--bg2);border:1px solid var(--border)">${igHtml}</div>`;
+      continue;
+    }
+
+    // Médicament normal
+    const drug=DRUGS.find(d=>d.id===item);
+    if(!drug) continue;
     const dose=calcDose(drug,w,gl);
     if(!dose) continue;
     const posology=gl==='VD'?(drug.posologyVD||drug.posologyCORFA):drug.posologyCORFA;
@@ -678,7 +718,7 @@ function renderDrugs(){
     const autoNote=notAuto?'<div class="drug-note">* Pas en autonomie — dosage indicatif</div>':'';
 
     let content=`<div class="drug-header"><span class="drug-name">${drug.name}</span><span class="drug-route">${drug.route}</span></div>
-    <div class="drug-posology">${posology}</div>`;
+      <div class="drug-posology">${posology}</div>`;
 
     if(dose.type==='single'){
       content+=`<div class="drug-calc${notAuto?' italic':''}">${dose.calc}${notAuto?' *':''}</div>`;
@@ -700,7 +740,6 @@ function renderDrugs(){
           <div class="dose-range-current${notAuto?' italic':''}" id="${cid}">${dose.med} ${dose.unit}${notAuto?' *':''}</div>
         </div>${srcNote}${autoNote}`;
     } else if(dose.type==='routes'){
-      // Deux curseurs séparés pour ketamine
       content+=dose.routes.map(r=>{
         const sid='slider-'+drug.id+'-'+r.route.toLowerCase();
         const cid='calc-'+drug.id+'-'+r.route.toLowerCase();
@@ -724,27 +763,6 @@ function renderDrugs(){
     }
     html+=drugCard(drug,content);
   }
-
-  // I-GEL — uniquement la taille correspondant au poids
-  const igMatch=IGEL_SIZES.filter(ig=>w>=ig.min&&w<ig.max);
-  const igOthers=IGEL_SIZES.filter(ig=>!(w>=ig.min&&w<ig.max));
-  let igHtml=`<div class="drug-header" style="color:var(--text)"><span class="drug-name">I-Gel</span></div>`;
-  if(igMatch.length>0){
-    igMatch.forEach(ig=>{
-      igHtml+=`<div class="igel-current" style="background:${ig.color};color:${ig.textColor}">
-        <div class="igel-current-label">${w} kg → ${ig.min}–${ig.max} kg</div>
-        <div class="igel-current-size">Taille ${ig.size}</div>
-      </div>`;
-    });
-  } else {
-    igHtml+=`<div style="color:var(--text3);font-size:13px">Hors plage (2–35 kg)</div>`;
-  }
-  igHtml+=`<div class="igel-other">`;
-  igOthers.forEach(ig=>{
-    igHtml+=`<div class="igel-other-row"><span>${ig.min}–${ig.max} kg</span><span>Taille ${ig.size}</span></div>`;
-  });
-  igHtml+=`</div>`;
-  html+=`<div class="drug-card" style="background:var(--bg2);border:1px solid var(--border)">${igHtml}</div>`;
 
   container.innerHTML=html;
 }

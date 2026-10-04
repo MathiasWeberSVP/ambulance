@@ -1,5 +1,5 @@
-const CACHE = 'pastell-v1.0';
-const FILES = ['./pastell.html', './manifest-pastell.json'];
+const CACHE = 'pastel-v1.0';
+const FILES = ['./pastel.html', './manifest-pastel.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));

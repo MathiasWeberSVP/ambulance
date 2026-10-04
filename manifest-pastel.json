@@ -1,8 +1,8 @@
 {
-  "name": "PASTELL",
-  "short_name": "PASTELL",
+  "name": "PASTEL",
+  "short_name": "PASTEL",
   "description": "Calcul des médicaments d'urgence pédiatriques",
-  "start_url": "./pastell.html",
+  "start_url": "./pastel.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0a0a",

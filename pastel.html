@@ -6,8 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0a0a">
-<link rel="manifest" href="manifest-pastell.json">
-<title>PASTELL</title>
+<link rel="manifest" href="manifest-pastel.json">
+<title>PASTEL</title>
 <style>
 :root{
   --bg:#0a0a0a;--bg2:#141414;--bg3:#1e1e1e;--bg4:#2a2a2a;
@@ -141,7 +141,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
 <div id="hdr">
   <div>
-    <div class="hdr-title">💊 PASTELL</div>
+    <div class="hdr-title">💊 PASTEL</div>
     <div class="hdr-sub" id="hdr-patient-summary">Saisir l'âge et le poids</div>
   </div>
   <div style="display:flex;gap:8px">
@@ -314,7 +314,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <b>iOS (Safari)</b> : bouton Partager → "Sur l'écran d'accueil"
       </div>
       <button id="pwa-install-btn" style="display:none;width:100%;margin-top:10px;padding:11px;background:var(--green-bg);border:1px solid var(--green);border-radius:var(--r);color:var(--green2);font-size:14px;font-weight:700;cursor:pointer" onclick="installPWA()">
-        📲 Installer PASTELL
+        📲 Installer PASTEL
       </button>
     </div>
 
@@ -330,7 +330,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
 
     <div class="card" style="text-align:center;color:var(--text3);font-size:11px">
-      PASTELL v1.1 — ©Mathias Weber — Créé avec l'aide de claude.ai
+      PASTEL v1.1 — ©Mathias Weber — Créé avec l'aide de claude.ai
     </div>
   </div>
 
@@ -1061,7 +1061,7 @@ function showTab(name,btn){
 // PERSISTENCE
 // ═══════════════════════════════════════════════════════
 function savePrefs(){
-  localStorage.setItem('pastell-prefs',JSON.stringify({
+  localStorage.setItem('pastel-prefs',JSON.stringify({
     guidelines:S.guidelines,
     lightTheme:S.lightTheme,themeManual:S._themeManual,
     ageUnit:S.ageUnit,
@@ -1071,7 +1071,7 @@ function savePrefs(){
 }
 function loadPrefs(){
   try{
-    const p=JSON.parse(localStorage.getItem('pastell-prefs')||'{}');
+    const p=JSON.parse(localStorage.getItem('pastel-prefs')||'{}');
     if(p.guidelines) S.guidelines=p.guidelines;
     if(p.ageUnit) S.ageUnit=p.ageUnit;
     if(p.customDoses) S.customDoses=p.customDoses;
@@ -1100,7 +1100,7 @@ async function requestWakeLock(){
 }
 document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible')await requestWakeLock();});
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw-pastell.js').then(()=>{
+  navigator.serviceWorker.register('./sw-pastel.js').then(()=>{
     document.getElementById('sw-desc').textContent='Hors ligne activé ✓';
   }).catch(()=>document.getElementById('sw-desc').textContent='Erreur (hébergement requis)');
 }

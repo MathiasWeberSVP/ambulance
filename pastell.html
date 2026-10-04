@@ -269,6 +269,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div id="custom-drugs-list"></div>
     </div>
 
+    <div class="prow">
+      <div>
+        <div class="pname">Arrondi Zoll Serie X</div>
+        <div class="pdesc">Arrondit l'énergie vers la valeur supérieure sélectionnable sur le Zoll</div>
+      </div>
+      <div class="tsw" id="sw-zoll" onclick="toggleZoll()"></div>
+    </div>
+
     <div class="card">
       <div class="ctitle">Affichage</div>
       <div class="prow">
@@ -324,6 +332,7 @@ const S={
   weight:null,useEstWeight:false,
   customDoses:{},
   wakeLock:null,
+  zollRound: false,
 };
 let pwaPrompt=null;
 
@@ -898,6 +907,25 @@ function updateCustomDose(drugId,field,val){
 }
 
 // ═══════════════════════════════════════════════════════
+// Arrondi Zoll
+// ═══════════════════════════════════════════════════════
+const ZOLL_ENERGIES=[1,2,3,4,5,6,7,8,9,10,15,20,30,50,70,85,100,120,150,200];
+
+function roundZoll(val){
+  if(!S.zollRound) return Math.round(val);
+  // Valeur directement supérieure ou égale dans la liste Zoll
+  const found=ZOLL_ENERGIES.find(e=>e>=val);
+  return found!==undefined?found:ZOLL_ENERGIES[ZOLL_ENERGIES.length-1];
+}
+
+function toggleZoll(){
+  S.zollRound=!S.zollRound;
+  document.getElementById('sw-zoll').classList.toggle('on',S.zollRound);
+  savePrefs();
+  renderDrugs();
+}
+
+// ═══════════════════════════════════════════════════════
 // THÈME & NAV
 // ═══════════════════════════════════════════════════════
 function toggleTheme(){
@@ -925,6 +953,7 @@ function savePrefs(){
     lightTheme:S.lightTheme,themeManual:S._themeManual,
     ageUnit:S.ageUnit,
     customDoses:S.customDoses,
+    zollRound: S.zollRound,
   }));
 }
 function loadPrefs(){
@@ -934,6 +963,7 @@ function loadPrefs(){
     if(p.ageUnit) S.ageUnit=p.ageUnit;
     if(p.customDoses) S.customDoses=p.customDoses;
     if(p.themeManual&&p.lightTheme!==undefined){S.lightTheme=p.lightTheme;S._themeManual=true;}
+    if(p.zollRound!==undefined) S.zollRound=p.zollRound;
   }catch(_){}
 }
 
@@ -977,6 +1007,7 @@ function init(){
   applyTheme();
   renderBP();
   requestWakeLock();
+  document.getElementById('sw-zoll').classList.toggle('on',S.zollRound);
 }
 init();
 </script>

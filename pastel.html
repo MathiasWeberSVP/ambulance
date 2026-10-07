@@ -762,8 +762,8 @@ function renderDrugs(){
 
     if(item==='__tube__'){
       if(ageYr===null) continue;
-      const tubeSize=(ageYr/4+3.5).toFixed(1);
-      html+=drugCard({bg:'#ffffff',textColor:'#000'},`
+        const tubeSizeRaw = ageYr/4 + 3.5;
+        const tubeSize = (Math.floor(tubeSizeRaw * 2) / 2).toFixed(1);      html+=drugCard({bg:'#ffffff',textColor:'#000'},`
         <div class="drug-header"><span class="drug-name">Tube</span><span class="drug-route">CORFA / VD</span></div>
         <div class="drug-posology">Âge / 4 + 3.5</div>
         <div class="drug-calc">${tubeSize} mm</div>`);
